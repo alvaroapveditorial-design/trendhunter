@@ -82,7 +82,7 @@ class RSSCollector:
             upvotes=self._estimated_upvotes(published_at),
             comments=0,
             shares=3,
-            category=self._category(clean_title, clean_summary),
+            category=self._category(clean_title, clean_summary, feed_key),
             keywords=self._keywords(clean_title, clean_summary, feed_key),
             published_at=published_at,
         )
@@ -144,7 +144,7 @@ class RSSCollector:
         keywords.append(FEED_KEYWORDS.get(feed_key, feed_key.replace("_", " ")))
         return sorted(set(keywords))[:6]
 
-    def _category(self, title: str, content: str) -> str:
+    def _category(self, title: str, content: str, feed_key: str) -> str:
         lowered = f"{title} {content}".lower()
         if any(term in lowered for term in ["ai", "llm", "agent", "copilot", "automation"]):
             return "ai_saas"
@@ -156,6 +156,12 @@ class RSSCollector:
             return "startups"
         if any(term in lowered for term in ["product", "launch", "app", "platform"]):
             return "product"
+        if feed_key == "producthunt":
+            return "product"
+        if feed_key == "techcrunch_startups":
+            return "startups"
+        if feed_key == "hn_frontpage":
+            return "developer_tools"
         return "emerging"
 
     def _estimated_upvotes(self, published_at: datetime | None) -> int:

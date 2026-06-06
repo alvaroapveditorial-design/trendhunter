@@ -144,6 +144,30 @@ def test_rss_collector_maps_atom_entry_to_signal():
     assert "developer tools" in signals[0].keywords
 
 
+def test_rss_collector_uses_feed_category_fallbacks():
+    xml = """
+    <rss version="2.0">
+      <channel>
+        <item>
+          <title>Fox Issue Tracker</title>
+          <link>https://example.com/issue-tracker</link>
+          <description>Track, plan, and release.</description>
+        </item>
+      </channel>
+    </rss>
+    """
+
+    signals = RSSCollector()._parse(
+        xml,
+        feed_key="producthunt",
+        feed_url="https://example.com/feed",
+        limit=5,
+    )
+
+    assert len(signals) == 1
+    assert signals[0].category == "product"
+
+
 def test_rss_ingestion_uses_article_title_not_feed_name(monkeypatch):
     def fake_collect(self, feed=None, limit=10):
         return [
