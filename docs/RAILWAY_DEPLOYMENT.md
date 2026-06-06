@@ -43,6 +43,7 @@ If Railway asks for config-as-code path, use:
 Set these variables on `trendhunter-backend`:
 
 ```bash
+RAILWAY_DOCKERFILE_PATH=Dockerfile.backend
 ENVIRONMENT=production
 DEBUG=false
 AUTO_CREATE_TABLES=false
@@ -66,6 +67,7 @@ Generate a public domain for the backend after the first deploy. The backend use
 Set these variables on `trendhunter-frontend` after the backend has a public domain:
 
 ```bash
+RAILWAY_DOCKERFILE_PATH=Dockerfile.frontend
 API_URL=https://${{trendhunter-backend.RAILWAY_PUBLIC_DOMAIN}}
 NEXT_PUBLIC_API_URL=https://${{trendhunter-backend.RAILWAY_PUBLIC_DOMAIN}}
 HOSTNAME=0.0.0.0
