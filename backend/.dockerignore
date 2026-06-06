@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+trendhunter.db
+*.db
+*.sqlite
+*.sqlite3
+venv/
+env/
+.env
