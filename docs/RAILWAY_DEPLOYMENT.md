@@ -66,6 +66,8 @@ Set these variables on `trendhunter-frontend` after the backend has a public dom
 ```bash
 API_URL=https://${{trendhunter-backend.RAILWAY_PUBLIC_DOMAIN}}
 NEXT_PUBLIC_API_URL=https://${{trendhunter-backend.RAILWAY_PUBLIC_DOMAIN}}
+HOSTNAME=0.0.0.0
+PORT=3000
 ```
 
 Then generate a public domain for the frontend and redeploy both services so CORS and client-side fetches use the final URLs.
