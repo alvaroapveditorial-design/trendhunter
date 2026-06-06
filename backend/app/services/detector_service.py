@@ -26,6 +26,10 @@ _SATURATION_SOURCE_WEIGHT = 8   # how much each source adds to saturation
 _SATURATION_MENTION_WEIGHT = 3  # how much each mention adds to saturation
 _OPPORTUNITY_BONUS = 12   # bonus applied before saturation discount
 _SATURATION_DISCOUNT = 0.25  # fraction of saturation subtracted from opportunity
+_RSS_ENGAGEMENT_FLOOR = 72  # RSS has no votes, so give published items a modest evidence floor
+_SOURCE_SCORE_BONUSES = {
+    "rss": 8,
+}
 
 STOP_WORDS = {
     "a",
@@ -39,13 +43,18 @@ STOP_WORDS = {
     "in",
     "into",
     "is",
+    "just",
+    "more",
     "new",
     "of",
     "on",
     "or",
+    "right",
     "that",
     "the",
     "to",
+    "use",
+    "uses",
     "using",
     "with",
 }
@@ -56,6 +65,8 @@ CATEGORY_KEYWORDS = {
     "product": {"customer", "feedback", "persona", "research", "user"},
     "developer_tools": {"api", "code", "dev", "github", "sdk"},
     "marketing": {"content", "growth", "landing", "seo"},
+    "startups": {"battlefield", "founder", "funding", "startup", "startups", "venture"},
+    "business": {"business", "company", "market", "revenue", "sales"},
 }
 
 
@@ -170,7 +181,7 @@ class DetectorService:
         title = self._trend_title(signal, keywords)
         slug = slugify(title)
         now = datetime.now(timezone.utc).replace(tzinfo=None)
-        engagement = signal.upvotes + signal.comments * 2 + signal.shares * 3
+        engagement = self._signal_engagement(signal)
 
         trend = self.db.query(Trend).filter(Trend.slug == slug).first()
         was_created = trend is None
@@ -242,7 +253,8 @@ class DetectorService:
         velocity = min(_VELOCITY_CAP, engagement / _VELOCITY_DIVISOR)
         breadth = min(_BREADTH_CAP, source_count * _BREADTH_MULTIPLIER)
         recurrence = min(_RECURRENCE_CAP, mentions * _RECURRENCE_MULTIPLIER)
-        score = min(100, _SCORE_BASE + velocity + breadth + recurrence)
+        source_bonus = _SOURCE_SCORE_BONUSES.get(signal.source_type, 0)
+        score = min(100, _SCORE_BASE + velocity + breadth + recurrence + source_bonus)
         saturation = min(100, _SATURATION_BASE + source_count * _SATURATION_SOURCE_WEIGHT + mentions * _SATURATION_MENTION_WEIGHT)
         opportunity = max(0, min(100, score + _OPPORTUNITY_BONUS - saturation * _SATURATION_DISCOUNT))
 
@@ -267,8 +279,20 @@ class DetectorService:
         inferred = [word for word, _ in Counter(word for word in words if word not in STOP_WORDS).most_common(6)]
         return sorted(set(explicit + inferred))[:10]
 
+    def _signal_engagement(self, signal: SignalIngest) -> int:
+        engagement = signal.upvotes + signal.comments * 2 + signal.shares * 3
+        if signal.source_type == "rss":
+            return max(engagement, _RSS_ENGAGEMENT_FLOOR)
+        return engagement
+
     def _infer_category(self, keywords: list[str]) -> str:
         keyword_set = set(" ".join(keywords).replace("-", " ").split())
+        if keyword_set.intersection(CATEGORY_KEYWORDS["ai_saas"]):
+            return "ai_saas"
+        if keyword_set.intersection(CATEGORY_KEYWORDS["developer_tools"]):
+            return "developer_tools"
+        if keyword_set.intersection(CATEGORY_KEYWORDS["privacy"]):
+            return "privacy"
         scores = {
             category: len(keyword_set.intersection(category_keywords))
             for category, category_keywords in CATEGORY_KEYWORDS.items()
@@ -277,8 +301,19 @@ class DetectorService:
         return category if score > 0 else "emerging"
 
     def _trend_title(self, signal: SignalIngest, keywords: list[str]) -> str:
+        if signal.source_type == "rss":
+            return self._rss_trend_title(signal, keywords)
         if signal.keywords:
             return signal.keywords[0].strip().title()
+        if keywords:
+            return " ".join(keywords[:3]).title()
+        return signal.title
+
+    def _rss_trend_title(self, signal: SignalIngest, keywords: list[str]) -> str:
+        words = re.findall(r"[a-zA-Z][a-zA-Z0-9-]{1,}", signal.title.lower())
+        meaningful = [word for word in words if word not in STOP_WORDS]
+        if meaningful:
+            return " ".join(meaningful[:5]).title()
         if keywords:
             return " ".join(keywords[:3]).title()
         return signal.title

@@ -35,7 +35,9 @@ def test_rss_endpoint_ingests_collected_signals(monkeypatch):
     assert payload["source_type"] == "rss"
     assert payload["fetched_signals"] == 1
     assert payload["processed_signals"] == 1
-    assert payload["trends"][0]["trend_score"] >= 30
+    assert payload["trends"][0]["trend_score"] >= 45
+    assert payload["trends"][0]["category"] == "ai_saas"
+    assert payload["trends"][0]["title"] == "Ai Tools Founder Research Workflows"
 
 
 def test_rss_endpoint_lists_configured_feeds():
@@ -111,6 +113,8 @@ def test_rss_collector_maps_rss_item_to_signal():
     assert signal.source_type == "rss"
     assert signal.source_id == "https://example.com/ai-agents"
     assert signal.content == "Founders are building workflow agents."
+    assert signal.category == "ai_saas"
+    assert signal.upvotes > 0
     assert "ai" in signal.keywords
     assert "startup" in signal.keywords
 
@@ -136,4 +140,34 @@ def test_rss_collector_maps_atom_entry_to_signal():
 
     assert len(signals) == 1
     assert signals[0].source_url == "https://example.com/api-trends"
+    assert signals[0].category == "developer_tools"
     assert "developer tools" in signals[0].keywords
+
+
+def test_rss_ingestion_uses_article_title_not_feed_name(monkeypatch):
+    def fake_collect(self, feed=None, limit=10):
+        return [
+            SignalIngest(
+                title="Startup founders use AI copilots for sales research",
+                content="Teams are automating prospect research workflows.",
+                source_type="rss",
+                source_url="https://example.com/sales-research",
+                source_id="https://example.com/sales-research",
+                upvotes=0,
+                comments=0,
+                shares=0,
+                keywords=["startup news", "ai", "startup"],
+                category="ai_saas",
+            )
+        ]
+
+    monkeypatch.setattr(RSSCollector, "collect", fake_collect)
+
+    with TestClient(app) as client:
+        response = client.post("/api/v1/ingestion/rss?feed=techcrunch_startups&limit=1")
+
+    assert response.status_code == 201
+    trend = response.json()["trends"][0]
+    assert trend["title"] == "Startup Founders Ai Copilots Sales"
+    assert trend["slug"] == "startup-founders-ai-copilots-sales"
+    assert trend["trend_score"] >= 45

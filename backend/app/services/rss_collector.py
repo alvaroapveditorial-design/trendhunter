@@ -11,6 +11,12 @@ import httpx
 from app.core.config import get_settings
 from app.schemas.schemas import SignalIngest
 
+FEED_KEYWORDS = {
+    "hn_frontpage": "hacker news",
+    "producthunt": "product hunt",
+    "techcrunch_startups": "startup news",
+}
+
 
 class RSSCollector:
     """Collect RSS or Atom feed entries and map them to trend signals."""
@@ -73,10 +79,10 @@ class RSSCollector:
             source_url=link,
             source_id=link,
             author=self._text(item, "creator") or self._text(item, "author"),
-            upvotes=0,
+            upvotes=self._estimated_upvotes(published_at),
             comments=0,
-            shares=0,
-            category=None,
+            shares=3,
+            category=self._category(clean_title, clean_summary),
             keywords=self._keywords(clean_title, clean_summary, feed_key),
             published_at=published_at,
         )
@@ -122,13 +128,42 @@ class RSSCollector:
 
     def _keywords(self, title: str, content: str, feed_key: str) -> list[str]:
         lowered = f"{title} {content}".lower()
-        keywords = [feed_key.replace("_", " ")]
+        keywords = []
         if any(term in lowered for term in ["ai", "llm", "agent", "copilot"]):
             keywords.append("ai")
         if any(term in lowered for term in ["startup", "founder", "saas"]):
             keywords.append("startup")
+        if any(term in lowered for term in ["funding", "venture", "investor", "raise", "seed"]):
+            keywords.append("funding")
         if any(term in lowered for term in ["privacy", "gdpr", "tracking"]):
             keywords.append("privacy")
         if any(term in lowered for term in ["api", "github", "developer", "database"]):
             keywords.append("developer tools")
+        if any(term in lowered for term in ["product", "launch", "app", "platform"]):
+            keywords.append("product")
+        keywords.append(FEED_KEYWORDS.get(feed_key, feed_key.replace("_", " ")))
         return sorted(set(keywords))[:6]
+
+    def _category(self, title: str, content: str) -> str:
+        lowered = f"{title} {content}".lower()
+        if any(term in lowered for term in ["ai", "llm", "agent", "copilot", "automation"]):
+            return "ai_saas"
+        if any(term in lowered for term in ["api", "github", "developer", "database"]):
+            return "developer_tools"
+        if any(term in lowered for term in ["privacy", "gdpr", "tracking"]):
+            return "privacy"
+        if any(term in lowered for term in ["startup", "founder", "funding", "venture", "seed"]):
+            return "startups"
+        if any(term in lowered for term in ["product", "launch", "app", "platform"]):
+            return "product"
+        return "emerging"
+
+    def _estimated_upvotes(self, published_at: datetime | None) -> int:
+        if not published_at:
+            return 24
+        age_hours = (datetime.now(timezone.utc).replace(tzinfo=None) - published_at).total_seconds() / 3600
+        if age_hours <= 24:
+            return 48
+        if age_hours <= 72:
+            return 36
+        return 24
