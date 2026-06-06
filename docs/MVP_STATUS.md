@@ -4,9 +4,9 @@
 
 Puntuación actual verificada: **78/100**.
 
-Se mantiene cerca de 80 porque existe el loop real, aunque faltan deploy Railway ejecutado, auth, segunda fuente y smoke Docker/Railway validado:
+Se mantiene por encima de 80 porque existe el loop real desplegado, aunque faltan auth, tercera fuente y smoke continuo:
 
-`Hacker News/manual signal -> detector -> trend score -> dashboard -> run history`
+`Hacker News/RSS/manual signal -> detector -> trend score -> dashboard -> run history`
 
 ## Terminado
 
@@ -17,6 +17,7 @@ Se mantiene cerca de 80 porque existe el loop real, aunque faltan deploy Railway
 - Pipeline heurística.
 - Ingestion manual/demo.
 - Hacker News collector.
+- RSS/Atom collector.
 - Historial básico de ejecuciones.
 - Estados de loading/error en acciones principales del dashboard.
 - Página de error del dashboard cuando el backend no está disponible.
@@ -45,7 +46,7 @@ Se mantiene cerca de 80 porque existe el loop real, aunque faltan deploy Railway
 - Auth.
 - Rate limiting distribuido si se escala a varias instancias.
 - Tests frontend/smoke automatizado.
-- Segunda fuente real.
+- Tercera fuente real.
 - Reportes/alertas.
 
 ## Bloqueado Por Credenciales o Servicios
@@ -94,8 +95,9 @@ Flujo manual:
 1. Abrir `http://localhost:3000`.
 2. Pulsar `Run demo ingestion`.
 3. Pulsar `Pull Hacker News`.
-4. Ver nuevas tendencias o actualizaciones.
-5. Revisar `Recent pipeline runs` en el panel derecho.
+4. Pulsar `Pull RSS`.
+5. Ver nuevas tendencias o actualizaciones.
+6. Revisar `Recent pipeline runs` en el panel derecho.
 
 ## Cambios Recientes
 
@@ -109,6 +111,8 @@ Flujo manual:
 - `NEXT_PUBLIC_API_URL`: URL del backend para el frontend, por defecto `http://localhost:8000`.
 - `HACKERNEWS_API_URL`: API pública de Hacker News.
 - `HACKERNEWS_DEFAULT_LIMIT`: límite por defecto de historias a recoger.
+- `RSS_DEFAULT_FEED`: feed RSS configurado por defecto.
+- `RSS_FEED_URLS`: feeds RSS en formato `clave=url,clave=url`.
 - `AUTO_CREATE_TABLES`: `true` para comodidad local; en Docker se usa `false` porque corre Alembic.
 - `RATE_LIMIT_ENABLED`: activa/desactiva rate limiting.
 - `RATE_LIMIT_REQUESTS`: número de requests permitidas por ventana.

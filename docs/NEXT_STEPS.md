@@ -4,10 +4,10 @@
 
 1. Hacer commit inicial del estado actual.
 2. Desplegar en Railway siguiendo `docs/RAILWAY_DEPLOYMENT.md`.
-3. Ejecutar smoke test Railway completo: health, trends, demo ingestion, Hacker News y dashboard.
+3. Ejecutar smoke test Railway completo: health, trends, demo ingestion, Hacker News, RSS y dashboard.
 4. Añadir migraciones incrementales cuando cambie el schema.
 5. Añadir tests frontend/smoke automatizado.
-6. Añadir una segunda fuente real simple: RSS o GitHub trending/search.
+6. Validar RSS en Railway y después añadir GitHub trending/search como tercera fuente.
 7. Añadir auth y rate limiting distribuido antes de beta pública.
 
 ## Siguiente P2

@@ -36,7 +36,8 @@ npm run dev
 4. Confirm trend cards are visible.
 5. Click `Run demo ingestion`.
 6. Click `Pull Hacker News`.
-7. Confirm the dashboard still loads and `Recent pipeline runs` shows successful runs.
+7. Click `Pull RSS`.
+8. Confirm the dashboard still loads and `Recent pipeline runs` shows successful runs.
 
 ## API Smoke Commands
 
@@ -46,6 +47,8 @@ curl http://localhost:8000/api/v1/trends
 curl http://localhost:8000/api/v1/ingestion/runs
 curl -X POST http://localhost:8000/api/v1/ingestion/demo
 curl -X POST "http://localhost:8000/api/v1/ingestion/hackernews?feed=top&limit=5"
+curl http://localhost:8000/api/v1/ingestion/rss/feeds
+curl -X POST "http://localhost:8000/api/v1/ingestion/rss?feed=techcrunch_startups&limit=5"
 ```
 
 Rate limited endpoints return `429` with `Retry-After` after too many mutation

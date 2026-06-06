@@ -50,6 +50,8 @@ DATABASE_URL=${{Postgres.DATABASE_URL}}
 CORS_ORIGINS=https://${{trendhunter-frontend.RAILWAY_PUBLIC_DOMAIN}}
 HACKERNEWS_API_URL=https://hacker-news.firebaseio.com/v0
 HACKERNEWS_DEFAULT_LIMIT=20
+RSS_DEFAULT_FEED=techcrunch_startups
+RSS_FEED_URLS=techcrunch_startups=https://techcrunch.com/category/startups/feed/,producthunt=https://www.producthunt.com/feed,hn_frontpage=https://hnrss.org/frontpage
 RATE_LIMIT_ENABLED=true
 RATE_LIMIT_REQUESTS=100
 RATE_LIMIT_PERIOD=3600
@@ -81,6 +83,8 @@ curl https://<backend-domain>/health
 curl https://<backend-domain>/api/v1/trends
 curl -X POST https://<backend-domain>/api/v1/ingestion/demo
 curl -X POST "https://<backend-domain>/api/v1/ingestion/hackernews?feed=top&limit=10"
+curl https://<backend-domain>/api/v1/ingestion/rss/feeds
+curl -X POST "https://<backend-domain>/api/v1/ingestion/rss?feed=techcrunch_startups&limit=5"
 ```
 
 Then open the frontend domain and verify:
@@ -88,6 +92,7 @@ Then open the frontend domain and verify:
 - Dashboard loads trends.
 - `Run demo ingestion` creates or updates trends.
 - `Pull Hacker News` creates or updates trends.
+- `Pull RSS` creates or updates trends.
 - `Recent pipeline runs` shows successful runs.
 
 ## 6. Known Production Gaps
@@ -99,7 +104,7 @@ Before external users:
 - Add authentication.
 - Keep PostgreSQL as the production database.
 - Replace in-memory rate limiting with Redis or provider-level protection if running multiple replicas.
-- Add a second public source, preferably RSS or GitHub.
+- Add GitHub as a third public source.
 - Add frontend smoke tests.
 
 ## References

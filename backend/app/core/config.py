@@ -63,6 +63,12 @@ class Settings(BaseSettings):
     NEWSAPI_KEY: str = ""
     HACKERNEWS_API_URL: str = "https://hacker-news.firebaseio.com/v0"
     HACKERNEWS_DEFAULT_LIMIT: int = 20
+    RSS_DEFAULT_FEED: str = "techcrunch_startups"
+    RSS_FEED_URLS: str = (
+        "techcrunch_startups=https://techcrunch.com/category/startups/feed/,"
+        "producthunt=https://www.producthunt.com/feed,"
+        "hn_frontpage=https://hnrss.org/frontpage"
+    )
 
     # ===== EMAIL =====
     RESEND_API_KEY: str = ""
@@ -135,6 +141,18 @@ class Settings(BaseSettings):
     def cors_origins_list(self) -> list[str]:
         """Parse CORS origins from string."""
         return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
+
+    @property
+    def rss_feeds(self) -> dict[str, str]:
+        """Parse configured RSS feeds from key=url pairs."""
+        feeds = {}
+        for item in self.RSS_FEED_URLS.split(","):
+            if "=" not in item:
+                continue
+            key, url = item.split("=", 1)
+            if key.strip() and url.strip():
+                feeds[key.strip()] = url.strip()
+        return feeds
 
     @property
     def is_production(self) -> bool:

@@ -12,7 +12,7 @@ El enfoque del proyecto es privacy-first: fuentes públicas, mínima exposición
 
 - **Detección de tendencias**: monitorización de señales emergentes en fuentes públicas.
 - **Scoring inteligente**: puntuación por momentum, velocidad, oportunidad y saturación.
-- **Pipeline de ingestión**: señales manuales, demo local y collector de Hacker News.
+- **Pipeline de ingestión**: señales manuales, demo local, collector de Hacker News y feeds RSS.
 - **Dashboard MVP**: visualización de tendencias, fuentes, categorías y ejecuciones recientes.
 - **Opportunity finder**: traducción de señales en posibles ideas SaaS o negocios.
 - **Alertas y reportes**: planificados para fases posteriores.
@@ -31,6 +31,7 @@ El repositorio ya incluye un MVP ejecutable:
 - Dashboard Next.js conectado al backend.
 - Pipeline heurístico que convierte señales en tendencias puntuadas.
 - Collector de Hacker News para señales públicas reales.
+- Collector RSS/Atom para una segunda fuente pública sin API key.
 - Historial básico de ejecuciones de ingestión.
 - Rate limiting in-memory para endpoints mutables de ingestión.
 - Docker y Alembic configurados para levantar el MVP completo.
@@ -165,6 +166,8 @@ curl http://localhost:8000/api/v1/trends/ai-copilots-vertical-saas
 curl http://localhost:8000/api/v1/ingestion/runs
 curl -X POST http://localhost:8000/api/v1/ingestion/demo
 curl -X POST "http://localhost:8000/api/v1/ingestion/hackernews?feed=top&limit=10"
+curl http://localhost:8000/api/v1/ingestion/rss/feeds
+curl -X POST "http://localhost:8000/api/v1/ingestion/rss?feed=techcrunch_startups&limit=10"
 ```
 
 Documentación automática:
@@ -185,6 +188,8 @@ Documentación automática:
 - `POST /api/v1/ingestion/demo`: ejecuta el detector demo local.
 - `POST /api/v1/ingestion/signals`: analiza señales raw y crea/actualiza tendencias.
 - `POST /api/v1/ingestion/hackernews?feed=top&limit=10`: recoge historias de Hacker News y las analiza.
+- `GET /api/v1/ingestion/rss/feeds`: lista feeds RSS configurados.
+- `POST /api/v1/ingestion/rss?feed=techcrunch_startups&limit=10`: recoge items RSS/Atom y los analiza.
 - `GET /api/v1/ingestion/runs`: lista ejecuciones recientes del pipeline.
 
 Los endpoints mutables de `/api/v1/ingestion` están protegidos por rate limiting in-memory. Se configura con `RATE_LIMIT_ENABLED`, `RATE_LIMIT_REQUESTS` y `RATE_LIMIT_PERIOD`.
@@ -233,6 +238,21 @@ Feeds soportados:
 - `ask`
 - `show`
 - `job`
+
+## RSS Collector
+
+RSS no requiere API key:
+
+```bash
+curl http://localhost:8000/api/v1/ingestion/rss/feeds
+curl -X POST "http://localhost:8000/api/v1/ingestion/rss?feed=techcrunch_startups&limit=10"
+```
+
+Feeds configurados por defecto:
+
+- `techcrunch_startups`
+- `producthunt`
+- `hn_frontpage`
 
 ---
 
@@ -302,6 +322,8 @@ npm run build
 - `NEXT_PUBLIC_API_URL`: URL del backend para el frontend, por defecto `http://localhost:8000`.
 - `HACKERNEWS_API_URL`: API pública de Hacker News.
 - `HACKERNEWS_DEFAULT_LIMIT`: límite por defecto de historias a recoger.
+- `RSS_DEFAULT_FEED`: feed RSS configurado por defecto.
+- `RSS_FEED_URLS`: feeds RSS en formato `clave=url,clave=url`.
 - `AUTO_CREATE_TABLES`: `true` para comodidad local; en Docker se usa `false`.
 - `RATE_LIMIT_ENABLED`: activa/desactiva rate limiting.
 - `RATE_LIMIT_REQUESTS`: número de requests permitidas por ventana.
@@ -389,6 +411,7 @@ Consulta [.env.example](.env.example) para la configuración completa.
 - [x] Dashboard frontend MVP.
 - [x] Pipeline heurístico local.
 - [x] Collector público de Hacker News.
+- [x] Collector público RSS/Atom.
 - [x] Tests backend.
 - [x] Build frontend.
 - [x] Target de deploy elegido: Railway.

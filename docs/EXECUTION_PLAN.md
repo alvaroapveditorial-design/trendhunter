@@ -7,7 +7,7 @@ AI Trend Hunter es un MVP SaaS en marcha para detectar tendencias emergentes a p
 Stack real actual:
 - Backend: FastAPI, SQLAlchemy, Pydantic, SQLite local por defecto.
 - Frontend: Next.js 16, React 18, TypeScript, CSS propio.
-- Fuente real integrada: Hacker News API pública.
+- Fuentes reales integradas: Hacker News API pública y RSS/Atom.
 - IA/LLM: configurado como futuro, sin llamadas reales todavía.
 - Auth/billing/queues/vector DB: documentados como visión, no implementados en el MVP actual.
 
@@ -21,6 +21,7 @@ Stack real actual:
 - Ingestion manual de señales.
 - Ingestion demo.
 - Collector Hacker News sin API key.
+- Collector RSS/Atom sin API key.
 - Registro de ejecuciones en `agent_executions`.
 - Dashboard Next.js con filtros, detalle, acciones de ingestion e historial reciente.
 - Tests backend de endpoints principales.
@@ -77,11 +78,12 @@ Stack real actual:
 - Next.js dashboard es la primera pantalla usable; landing separada puede esperar.
 - Detector heurístico antes de LLM para mantener MVP funcional sin credenciales.
 - Hacker News como primera fuente real porque no necesita API key.
+- RSS como segunda fuente real porque amplía cobertura sin credenciales.
 
 ## Orden Recomendado
 
 1. Cerrar loop MVP: fuente real -> ingestion -> scoring -> dashboard -> historial.
 2. Añadir smoke test automatizado de frontend/API.
 3. Elegir target de deploy y ajustar variables.
-4. Añadir segunda fuente pública.
+4. Validar RSS desplegado y añadir GitHub como tercera fuente pública.
 5. Añadir auth solo cuando haya un flujo beta claro.

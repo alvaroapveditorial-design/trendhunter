@@ -1,5 +1,7 @@
 """Signal ingestion API for the MVP detector."""
 
+from xml.etree import ElementTree
+
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
@@ -14,6 +16,7 @@ from app.schemas.schemas import (
 )
 from app.services.detector_service import DetectorService
 from app.services.hackernews_collector import HackerNewsCollector
+from app.services.rss_collector import RSSCollector
 
 router = APIRouter()
 
@@ -75,6 +78,50 @@ def ingest_hackernews(
     return SourceIngestionResponse(
         **result.model_dump(),
         source_type="hackernews",
+        fetched_signals=len(signals),
+        skipped_signals=max(0, limit - len(signals)),
+    )
+
+
+@router.get("/rss/feeds", response_model=list[str])
+def list_rss_feeds():
+    """List configured public RSS feeds."""
+    return RSSCollector().available_feeds()
+
+
+@router.post("/rss", response_model=SourceIngestionResponse, status_code=status.HTTP_201_CREATED)
+def ingest_rss(
+    feed: str | None = Query(default=None, min_length=2, max_length=80),
+    limit: int = Query(default=10, ge=1, le=30),
+    db: Session = Depends(get_db),
+):
+    """Collect public RSS/Atom feed items and analyze them as trend signals."""
+    try:
+        signals = RSSCollector().collect(feed=feed, limit=limit)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except (httpx.HTTPError, ElementTree.ParseError) as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Could not fetch RSS feed. Try again later.",
+        ) from exc
+
+    if not signals:
+        return SourceIngestionResponse(
+            processed_signals=0,
+            created_trends=0,
+            updated_trends=0,
+            trend_ids=[],
+            trends=[],
+            source_type="rss",
+            fetched_signals=0,
+            skipped_signals=limit,
+        )
+
+    result = DetectorService(db).ingest_batch(SignalBatchIngest(signals=signals))
+    return SourceIngestionResponse(
+        **result.model_dump(),
+        source_type="rss",
         fetched_signals=len(signals),
         skipped_signals=max(0, limit - len(signals)),
     )
