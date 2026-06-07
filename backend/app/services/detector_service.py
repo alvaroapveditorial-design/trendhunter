@@ -28,6 +28,7 @@ _OPPORTUNITY_BONUS = 12   # bonus applied before saturation discount
 _SATURATION_DISCOUNT = 0.25  # fraction of saturation subtracted from opportunity
 _RSS_ENGAGEMENT_FLOOR = 72  # RSS has no votes, so give published items a modest evidence floor
 _SOURCE_SCORE_BONUSES = {
+    "github": 12,
     "rss": 8,
 }
 
