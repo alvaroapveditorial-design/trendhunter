@@ -62,6 +62,7 @@ RATE_LIMIT_REQUESTS=100
 RATE_LIMIT_PERIOD=3600
 JWT_SECRET=<generate-a-strong-secret>
 SECRET_KEY=<generate-a-strong-secret>
+INGESTION_API_KEY=<generate-a-shared-ingestion-secret>
 ```
 
 Generate a public domain for the backend after the first deploy. The backend uses Railway's `PORT` automatically through the Dockerfile.
@@ -76,6 +77,7 @@ API_URL=https://${{trendhunter-backend.RAILWAY_PUBLIC_DOMAIN}}
 NEXT_PUBLIC_API_URL=https://${{trendhunter-backend.RAILWAY_PUBLIC_DOMAIN}}
 HOSTNAME=0.0.0.0
 PORT=3000
+INGESTION_API_KEY=<same-value-as-backend>
 ```
 
 Then generate a public domain for the frontend and redeploy both services so CORS and client-side fetches use the final URLs.

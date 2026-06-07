@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const API_URL = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const INGESTION_API_KEY = process.env.INGESTION_API_KEY;
 
 type RouteContext = {
   params: Promise<{ path: string[] }>;
@@ -18,6 +19,14 @@ async function proxy(request: NextRequest, context: RouteContext) {
     const contentType = request.headers.get("Content-Type");
     if (contentType) {
       headers.set("Content-Type", contentType);
+    }
+    if (
+      INGESTION_API_KEY &&
+      request.method !== "GET" &&
+      request.method !== "HEAD" &&
+      upstreamUrl.pathname.startsWith("/api/v1/ingestion")
+    ) {
+      headers.set("X-Ingestion-Key", INGESTION_API_KEY);
     }
 
     const body =

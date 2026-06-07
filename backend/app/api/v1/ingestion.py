@@ -3,9 +3,10 @@
 from xml.etree import ElementTree
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from app.core.config import get_settings
 from app.models.base import AgentExecution
 from app.models.database import get_db
 from app.schemas.schemas import (
@@ -22,6 +23,16 @@ from app.services.rss_collector import RSSCollector
 router = APIRouter()
 
 
+def require_ingestion_key(x_ingestion_key: str | None = Header(default=None)) -> None:
+    """Require a shared secret for ingestion mutations when configured."""
+    expected_key = get_settings().INGESTION_API_KEY
+    if expected_key and x_ingestion_key != expected_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Ingestion key required.",
+        )
+
+
 @router.get("/runs", response_model=list[AgentExecutionResponse])
 def list_ingestion_runs(
     limit: int = Query(default=10, ge=1, le=50),
@@ -36,19 +47,34 @@ def list_ingestion_runs(
     )
 
 
-@router.post("/signals", response_model=IngestionRunResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/signals",
+    response_model=IngestionRunResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_ingestion_key)],
+)
 def ingest_signals(payload: SignalBatchIngest, db: Session = Depends(get_db)):
     """Analyze raw public signals and create or update trends."""
     return DetectorService(db).ingest_batch(payload)
 
 
-@router.post("/demo", response_model=IngestionRunResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/demo",
+    response_model=IngestionRunResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_ingestion_key)],
+)
 def run_demo_ingestion(db: Session = Depends(get_db)):
     """Run a deterministic demo ingestion batch."""
     return DetectorService(db).run_demo()
 
 
-@router.post("/hackernews", response_model=SourceIngestionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/hackernews",
+    response_model=SourceIngestionResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_ingestion_key)],
+)
 def ingest_hackernews(
     feed: str = Query(default="top", pattern="^(top|new|best|ask|show|job)$"),
     limit: int = Query(default=20, ge=1, le=50),
@@ -90,7 +116,12 @@ def list_rss_feeds():
     return RSSCollector().available_feeds()
 
 
-@router.post("/rss", response_model=SourceIngestionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/rss",
+    response_model=SourceIngestionResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_ingestion_key)],
+)
 def ingest_rss(
     feed: str | None = Query(default=None, min_length=2, max_length=80),
     limit: int = Query(default=10, ge=1, le=30),
@@ -128,7 +159,12 @@ def ingest_rss(
     )
 
 
-@router.post("/github", response_model=SourceIngestionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/github",
+    response_model=SourceIngestionResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_ingestion_key)],
+)
 def ingest_github(
     q: str | None = Query(default=None, min_length=2, max_length=160),
     limit: int = Query(default=10, ge=1, le=30),

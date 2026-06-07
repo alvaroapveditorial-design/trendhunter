@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     # ===== SECURITY =====
     SECRET_KEY: str = "change-me-in-production"
     CORS_ORIGINS: str = "http://localhost:3000"
+    INGESTION_API_KEY: str = ""
 
     # ===== EXTERNAL APIS =====
     REDDIT_CLIENT_ID: str = ""

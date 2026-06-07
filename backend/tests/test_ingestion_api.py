@@ -2,6 +2,7 @@
 
 from fastapi.testclient import TestClient
 
+from app.core.config import get_settings
 from app.main import app
 
 
@@ -14,6 +15,25 @@ def test_demo_ingestion_creates_or_updates_trends():
     assert payload["processed_signals"] == 2
     assert payload["created_trends"] + payload["updated_trends"] == 2
     assert payload["trends"]
+
+
+def test_ingestion_mutations_require_key_when_configured(monkeypatch):
+    monkeypatch.setenv("INGESTION_API_KEY", "test-ingestion-key")
+    get_settings.cache_clear()
+
+    try:
+        with TestClient(app) as client:
+            response = client.post("/api/v1/ingestion/demo")
+            authed_response = client.post(
+                "/api/v1/ingestion/demo",
+                headers={"X-Ingestion-Key": "test-ingestion-key"},
+            )
+    finally:
+        get_settings.cache_clear()
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Ingestion key required."
+    assert authed_response.status_code == 201
 
 
 def test_manual_signal_ingestion_returns_scored_trend():
