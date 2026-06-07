@@ -9,6 +9,10 @@ jobs:
   test-and-smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      BACKEND_URL: https://trendhunter-backend-production.up.railway.app
+      FRONTEND_URL: https://trendhunter-frontend-production.up.railway.app
 
     steps:
       - name: Checkout
@@ -50,11 +54,23 @@ jobs:
         working-directory: frontend
         run: npx playwright install --with-deps chromium
 
-      - name: Wait for Railway autodeploy
-        run: sleep 90
+      - name: Wait for production services
+        run: |
+          for attempt in {1..30}; do
+            if curl -fsS "$BACKEND_URL/health" >/dev/null \
+              && curl -fsS "$BACKEND_URL/api/v1/trends" >/dev/null \
+              && curl -fsS "$FRONTEND_URL" >/dev/null; then
+              echo "Production services are ready"
+              exit 0
+            fi
+            echo "Waiting for Railway services... attempt $attempt"
+            sleep 10
+          done
+          echo "Production services were not ready in time"
+          exit 1
 
       - name: Run production smoke
         working-directory: frontend
         env:
-          PLAYWRIGHT_BASE_URL: https://trendhunter-frontend-production.up.railway.app
+          PLAYWRIGHT_BASE_URL: ${{ env.FRONTEND_URL }}
         run: npm run smoke
