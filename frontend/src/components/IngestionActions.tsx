@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 
 type ActionKind = "demo" | "hackernews" | "rss" | "github";
 
@@ -30,32 +30,29 @@ async function runIngestion(kind: ActionKind) {
 
 export function IngestionActions() {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
   const [runningAction, setRunningAction] = useState<ActionKind | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  function handleRun(kind: ActionKind) {
+  async function handleRun(kind: ActionKind) {
     setRunningAction(kind);
     setMessage(null);
     setError(null);
 
-    startTransition(async () => {
-      try {
-        const result = await runIngestion(kind);
-        setMessage(
-          `${result.processed_signals} signals processed. ${result.created_trends} created, ${result.updated_trends} updated.`
-        );
-        router.refresh();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Could not run ingestion.");
-      } finally {
-        setRunningAction(null);
-      }
-    });
+    try {
+      const result = await runIngestion(kind);
+      setMessage(
+        `${result.processed_signals} signals processed. ${result.created_trends} created, ${result.updated_trends} updated.`
+      );
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not run ingestion.");
+    } finally {
+      setRunningAction(null);
+    }
   }
 
-  const disabled = isPending || runningAction !== null;
+  const disabled = runningAction !== null;
 
   return (
     <div className="ingestion-actions">
