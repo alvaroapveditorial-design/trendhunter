@@ -73,6 +73,76 @@ def test_signal_keywords_drop_filler_words():
     assert "onboarding automation" in keywords
 
 
+def test_existing_filler_keywords_are_cleaned_on_update():
+    with TestClient(app) as client:
+        client.post(
+            "/api/v1/ingestion/signals",
+            json={
+                "signals": [
+                    {
+                        "title": "Privacy analytics for onboarding funnels",
+                        "content": "EU founders want privacy analytics for activation.",
+                        "source_type": "manual_test",
+                        "source_id": "privacy-cleanup-seed",
+                        "upvotes": 20,
+                        "comments": 2,
+                        "keywords": ["privacy analytics", "now", "you"],
+                        "category": "privacy",
+                    }
+                ]
+            },
+        )
+        response = client.post(
+            "/api/v1/ingestion/signals",
+            json={
+                "signals": [
+                    {
+                        "title": "Privacy analytics for onboarding funnels",
+                        "content": "Cookie-light onboarding analytics for EU SaaS teams.",
+                        "source_type": "manual_test",
+                        "source_id": "privacy-cleanup-update",
+                        "upvotes": 30,
+                        "comments": 3,
+                        "keywords": ["privacy analytics", "some", "want"],
+                        "category": "privacy",
+                    }
+                ]
+            },
+        )
+
+    assert response.status_code == 201
+    keywords = response.json()["trends"][0]["keywords"]
+    assert "now" not in keywords
+    assert "you" not in keywords
+    assert "some" not in keywords
+    assert "want" not in keywords
+    assert "privacy analytics" in keywords
+
+
+def test_generic_ai_keyword_does_not_become_title():
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/ingestion/signals",
+            json={
+                "signals": [
+                    {
+                        "title": "Show HN: AI copilot for database migrations",
+                        "content": "Developers are testing migration copilots for production databases.",
+                        "source_type": "hackernews",
+                        "source_id": "generic-title-test",
+                        "upvotes": 77,
+                        "comments": 12,
+                        "keywords": ["ai"],
+                        "category": "ai_saas",
+                    }
+                ]
+            },
+        )
+
+    assert response.status_code == 201
+    assert response.json()["trends"][0]["title"] == "Hn Ai Copilot Database Migrations"
+
+
 def test_ingested_trend_is_queryable():
     with TestClient(app) as client:
         client.post(

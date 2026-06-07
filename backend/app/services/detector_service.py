@@ -32,6 +32,20 @@ _SOURCE_SCORE_BONUSES = {
     "rss": 8,
 }
 
+GENERIC_TITLE_KEYWORDS = {
+    "ai",
+    "agent",
+    "agents",
+    "code",
+    "developer tools",
+    "github",
+    "product",
+    "saas",
+    "software",
+    "startup",
+    "startups",
+}
+
 STOP_WORDS = {
     "a",
     "an",
@@ -40,6 +54,7 @@ STOP_WORDS = {
     "are",
     "as",
     "at",
+    "any",
     "be",
     "been",
     "being",
@@ -65,6 +80,7 @@ STOP_WORDS = {
     "it",
     "just",
     "link",
+    "longer",
     "make",
     "many",
     "me",
@@ -77,10 +93,13 @@ STOP_WORDS = {
     "on",
     "or",
     "our",
+    "own",
+    "please",
     "problem",
     "right",
     "ship",
     "show",
+    "shot",
     "some",
     "than",
     "that",
@@ -291,7 +310,7 @@ class DetectorService:
         keywords: list[str],
         category: str,
     ) -> None:
-        all_keywords = sorted(set((trend.keywords or []) + keywords))
+        all_keywords = self._clean_keywords_list((trend.keywords or []) + keywords)
         source_count = self.db.query(TrendSource).filter(TrendSource.trend_id == trend.id).count()
         source_count = max(source_count, 1)
         mentions = max(trend.mentions_count or 0, 0) + 1
@@ -328,7 +347,15 @@ class DetectorService:
         ]
         words = re.findall(r"[a-zA-Z][a-zA-Z0-9-]{2,}", f"{signal.title} {signal.content or ''}".lower())
         inferred = [word for word, _ in Counter(word for word in words if word not in STOP_WORDS).most_common(6)]
-        return sorted(set(explicit + inferred))[:10]
+        return self._clean_keywords_list(explicit + inferred)[:10]
+
+    def _clean_keywords_list(self, keywords: list[str]) -> list[str]:
+        cleaned = []
+        for keyword in keywords:
+            normalized = keyword.strip().lower()
+            if self._is_meaningful_keyword(normalized):
+                cleaned.append(normalized)
+        return sorted(set(cleaned))
 
     def _is_meaningful_keyword(self, keyword: str) -> bool:
         normalized = keyword.strip().lower()
@@ -359,22 +386,40 @@ class DetectorService:
         return category if score > 0 else "emerging"
 
     def _trend_title(self, signal: SignalIngest, keywords: list[str]) -> str:
+        if signal.source_type == "github":
+            return self._github_trend_title(signal, keywords)
         if signal.source_type == "rss":
             return self._rss_trend_title(signal, keywords)
-        if signal.keywords:
-            return signal.keywords[0].strip().title()
-        if keywords:
-            return " ".join(keywords[:3]).title()
-        return signal.title
+        explicit = [keyword.strip().lower() for keyword in signal.keywords if self._is_title_keyword(keyword)]
+        if explicit:
+            return explicit[0].title()
+        return self._title_from_signal(signal.title, keywords)
 
-    def _rss_trend_title(self, signal: SignalIngest, keywords: list[str]) -> str:
-        words = re.findall(r"[a-zA-Z][a-zA-Z0-9-]{1,}", signal.title.lower())
+    def _is_title_keyword(self, keyword: str) -> bool:
+        normalized = keyword.strip().lower()
+        if not self._is_meaningful_keyword(normalized):
+            return False
+        return normalized not in GENERIC_TITLE_KEYWORDS
+
+    def _title_from_signal(self, title: str, keywords: list[str], max_words: int = 5) -> str:
+        words = re.findall(r"[a-zA-Z][a-zA-Z0-9-]{1,}", title.lower())
         meaningful = [word for word in words if word not in STOP_WORDS]
         if meaningful:
-            return " ".join(meaningful[:5]).title()
+            return " ".join(meaningful[:max_words]).title()
+        title_keywords = [keyword for keyword in keywords if keyword not in GENERIC_TITLE_KEYWORDS]
+        if title_keywords:
+            return " ".join(title_keywords[:3]).title()
         if keywords:
             return " ".join(keywords[:3]).title()
-        return signal.title
+        return title
+
+    def _rss_trend_title(self, signal: SignalIngest, keywords: list[str]) -> str:
+        return self._title_from_signal(signal.title, keywords)
+
+    def _github_trend_title(self, signal: SignalIngest, keywords: list[str]) -> str:
+        repo_name = signal.title.rsplit("/", 1)[-1].replace("-", " ").replace("_", " ")
+        title = self._title_from_signal(repo_name, keywords, max_words=4)
+        return title if title.lower() not in GENERIC_TITLE_KEYWORDS else self._title_from_signal(signal.title, keywords)
 
     def _insight(self, trend: Trend) -> str:
         return (
