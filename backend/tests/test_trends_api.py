@@ -23,6 +23,17 @@ def test_list_seeded_trends():
     assert trends[0]["trend_score"] >= trends[-1]["trend_score"]
 
 
+def test_list_trends_can_filter_by_source_type():
+    with TestClient(app) as client:
+        client.post("/api/v1/ingestion/demo")
+        response = client.get("/api/v1/trends?source_type=demo")
+
+    assert response.status_code == 200
+    trends = response.json()
+    assert trends
+    assert all(trend["source_count"] >= 1 for trend in trends)
+
+
 def test_get_trend_detail_by_slug():
     with TestClient(app) as client:
         response = client.get("/api/v1/trends/ai-copilots-vertical-saas")
@@ -39,3 +50,12 @@ def test_list_categories():
 
     assert response.status_code == 200
     assert "ai_saas" in response.json()
+
+
+def test_list_sources():
+    with TestClient(app) as client:
+        client.post("/api/v1/ingestion/demo")
+        response = client.get("/api/v1/trends/meta/sources")
+
+    assert response.status_code == 200
+    assert "demo" in response.json()

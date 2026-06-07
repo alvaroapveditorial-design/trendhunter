@@ -35,31 +35,73 @@ STOP_WORDS = {
     "a",
     "an",
     "and",
+    "another",
     "are",
     "as",
+    "at",
+    "be",
+    "been",
+    "being",
+    "but",
+    "by",
+    "can",
+    "could",
+    "did",
+    "do",
+    "does",
+    "don",
+    "each",
     "for",
     "from",
+    "get",
+    "has",
+    "have",
+    "having",
     "how",
     "in",
     "into",
     "is",
+    "it",
     "just",
     "link",
+    "make",
+    "many",
+    "me",
     "more",
+    "most",
     "new",
+    "not",
     "now",
     "of",
     "on",
     "or",
+    "our",
     "problem",
     "right",
+    "ship",
+    "show",
+    "some",
+    "than",
     "that",
     "the",
+    "their",
+    "these",
+    "they",
+    "this",
     "to",
     "use",
     "uses",
     "using",
+    "want",
+    "was",
+    "were",
+    "what",
+    "when",
+    "where",
+    "who",
+    "why",
     "with",
+    "you",
     "your",
 }
 
@@ -278,10 +320,21 @@ class DetectorService:
         trend.last_updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
 
     def _keywords(self, signal: SignalIngest) -> list[str]:
-        explicit = [keyword.strip().lower() for keyword in signal.keywords if keyword.strip()]
+        explicit = [
+            keyword.strip().lower()
+            for keyword in signal.keywords
+            if self._is_meaningful_keyword(keyword)
+        ]
         words = re.findall(r"[a-zA-Z][a-zA-Z0-9-]{2,}", f"{signal.title} {signal.content or ''}".lower())
         inferred = [word for word, _ in Counter(word for word in words if word not in STOP_WORDS).most_common(6)]
         return sorted(set(explicit + inferred))[:10]
+
+    def _is_meaningful_keyword(self, keyword: str) -> bool:
+        normalized = keyword.strip().lower()
+        if not normalized:
+            return False
+        words = re.findall(r"[a-zA-Z][a-zA-Z0-9-]{1,}", normalized)
+        return any(word not in STOP_WORDS for word in words)
 
     def _signal_engagement(self, signal: SignalIngest) -> int:
         engagement = signal.upvotes + signal.comments * 2 + signal.shares * 3

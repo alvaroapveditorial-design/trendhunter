@@ -34,11 +34,13 @@ async function postJson<T>(path: string): Promise<T> {
 export function getTrends(params?: {
   q?: string;
   category?: string;
+  sourceType?: string;
   minScore?: number;
 }): Promise<Trend[]> {
   const search = new URLSearchParams();
   if (params?.q) search.set("q", params.q);
   if (params?.category) search.set("category", params.category);
+  if (params?.sourceType) search.set("source_type", params.sourceType);
   if (params?.minScore) search.set("min_score", String(params.minScore));
 
   const query = search.toString();
@@ -47,6 +49,10 @@ export function getTrends(params?: {
 
 export function getCategories(): Promise<string[]> {
   return getJson<string[]>("/api/v1/trends/meta/categories");
+}
+
+export function getSources(): Promise<string[]> {
+  return getJson<string[]>("/api/v1/trends/meta/sources");
 }
 
 export function getTrend(slug: string): Promise<TrendDetail> {

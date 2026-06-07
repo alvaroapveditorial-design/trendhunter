@@ -14,6 +14,7 @@ router = APIRouter()
 def list_trends(
     q: str | None = Query(default=None, description="Search in title, description, or keywords"),
     category: str | None = Query(default=None),
+    source_type: str | None = Query(default=None, min_length=2, max_length=40),
     min_score: float = Query(default=0, ge=0, le=100),
     limit: int = Query(default=20, ge=1, le=100),
     skip: int = Query(default=0, ge=0, description="Number of results to skip for pagination"),
@@ -23,6 +24,7 @@ def list_trends(
     return TrendService(db).list_trends(
         q=q,
         category=category,
+        source_type=source_type,
         min_score=min_score,
         limit=limit,
         skip=skip,
@@ -33,6 +35,12 @@ def list_trends(
 def list_categories(db: Session = Depends(get_db)):
     """List categories available in the database."""
     return TrendService(db).list_categories()
+
+
+@router.get("/meta/sources", response_model=list[str])
+def list_sources(db: Session = Depends(get_db)):
+    """List source types available in the database."""
+    return TrendService(db).list_sources()
 
 
 @router.get("/{trend_id_or_slug}", response_model=TrendDetailResponse)

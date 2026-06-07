@@ -1,5 +1,5 @@
 import { IngestionActions } from "@/components/IngestionActions";
-import { getCategories, getIngestionRuns, getTrend, getTrends } from "@/lib/api";
+import { getCategories, getIngestionRuns, getSources, getTrend, getTrends } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -16,21 +16,32 @@ function scoreTone(score: number) {
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ q?: string; category?: string; min_score?: string; trend?: string }>;
+  searchParams?: Promise<{
+    q?: string;
+    category?: string;
+    source_type?: string;
+    min_score?: string;
+    trend?: string;
+  }>;
 }) {
   const params = (await searchParams) ?? {};
   const minScore = params.min_score ? Number(params.min_score) : undefined;
-  const [trends, categories] = await Promise.all([
+  const [trends, categories, sources] = await Promise.all([
     getTrends({
       q: params.q,
       category: params.category,
+      sourceType: params.source_type,
       minScore: Number.isNaN(minScore) ? undefined : minScore,
     }),
     getCategories(),
+    getSources(),
   ]);
   const runs = await getIngestionRuns();
 
-  const selectedSlug = params.trend ?? trends[0]?.slug;
+  const selectedSlug =
+    params.trend && trends.some((trend) => trend.slug === params.trend)
+      ? params.trend
+      : trends[0]?.slug;
   const selectedTrend = selectedSlug ? await getTrend(selectedSlug) : null;
   const topTrend = trends[0];
 
@@ -82,6 +93,17 @@ export default async function DashboardPage({
           </select>
         </label>
         <label>
+          Source
+          <select name="source_type" defaultValue={params.source_type ?? ""}>
+            <option value="">All sources</option>
+            {sources.map((source) => (
+              <option key={source} value={source}>
+                {source === "hackernews" ? "Hacker News" : source}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
           Min score
           <input
             name="min_score"
@@ -113,7 +135,7 @@ export default async function DashboardPage({
           {trends.length === 0 ? (
             <div className="empty-state">
               <h2>No trends found</h2>
-              <p>Try lowering the minimum score or clearing the search term.</p>
+              <p>Try lowering the minimum score or clearing the active filters.</p>
             </div>
           ) : (
             trends.map((trend) => (
@@ -123,6 +145,7 @@ export default async function DashboardPage({
                 href={`/?${new URLSearchParams({
                   ...(params.q ? { q: params.q } : {}),
                   ...(params.category ? { category: params.category } : {}),
+                  ...(params.source_type ? { source_type: params.source_type } : {}),
                   ...(params.min_score ? { min_score: params.min_score } : {}),
                   trend: trend.slug,
                 }).toString()}`}

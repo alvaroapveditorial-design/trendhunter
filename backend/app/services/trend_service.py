@@ -6,7 +6,7 @@ from uuid import uuid4
 from sqlalchemy import or_
 from sqlalchemy.orm import Session, selectinload
 
-from app.models.base import Trend
+from app.models.base import Trend, TrendSource
 from app.schemas.schemas import TrendCreate
 
 
@@ -20,6 +20,7 @@ class TrendService:
         self,
         q: str | None = None,
         category: str | None = None,
+        source_type: str | None = None,
         min_score: float = 0,
         limit: int = 20,
         skip: int = 0,
@@ -32,6 +33,9 @@ class TrendService:
         if category:
             query = query.filter(Trend.category == category)
 
+        if source_type:
+            query = query.join(TrendSource).filter(TrendSource.source_type == source_type)
+
         if q:
             search = f"%{q.lower()}%"
             query = query.filter(
@@ -42,7 +46,13 @@ class TrendService:
                 )
             )
 
-        return query.order_by(Trend.trend_score.desc(), Trend.detected_at.desc()).offset(skip).limit(limit).all()
+        return (
+            query.distinct()
+            .order_by(Trend.trend_score.desc(), Trend.detected_at.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
     def get_trend(self, trend_id_or_slug: str) -> Trend | None:
         return (
@@ -88,6 +98,17 @@ class TrendService:
             .filter(Trend.is_active.is_(True))
             .distinct()
             .order_by(Trend.category.asc())
+            .all()
+        )
+        return [row[0] for row in rows]
+
+    def list_sources(self) -> list[str]:
+        rows = (
+            self.db.query(TrendSource.source_type)
+            .join(Trend, Trend.id == TrendSource.trend_id)
+            .filter(Trend.is_active.is_(True))
+            .distinct()
+            .order_by(TrendSource.source_type.asc())
             .all()
         )
         return [row[0] for row in rows]

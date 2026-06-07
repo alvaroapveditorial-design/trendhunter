@@ -46,6 +46,33 @@ def test_manual_signal_ingestion_returns_scored_trend():
     assert payload["trends"][0]["category"] == "ai_saas"
 
 
+def test_signal_keywords_drop_filler_words():
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/ingestion/signals",
+            json={
+                "signals": [
+                    {
+                        "title": "Now you can automate onboarding workflows",
+                        "content": "Some teams want AI onboarding flows that reduce manual setup.",
+                        "source_type": "manual_test",
+                        "source_id": "filler-keywords-test",
+                        "upvotes": 40,
+                        "comments": 4,
+                        "keywords": ["now", "you", "some", "onboarding automation"],
+                    }
+                ]
+            },
+        )
+
+    assert response.status_code == 201
+    keywords = response.json()["trends"][0]["keywords"]
+    assert "now" not in keywords
+    assert "you" not in keywords
+    assert "some" not in keywords
+    assert "onboarding automation" in keywords
+
+
 def test_ingested_trend_is_queryable():
     with TestClient(app) as client:
         client.post(

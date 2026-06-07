@@ -56,6 +56,7 @@ RSS_FEED_URLS=techcrunch_startups=https://techcrunch.com/category/startups/feed/
 GITHUB_API_URL=https://api.github.com
 GITHUB_DEFAULT_LIMIT=10
 GITHUB_SEARCH_QUERY=topic:ai stars:>50
+GITHUB_TOKEN=<optional-github-personal-access-token>
 RATE_LIMIT_ENABLED=true
 RATE_LIMIT_REQUESTS=100
 RATE_LIMIT_PERIOD=3600
