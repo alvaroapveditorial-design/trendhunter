@@ -11,23 +11,36 @@ async function proxy(request: NextRequest, context: RouteContext) {
   const upstreamUrl = new URL(`/${path.join("/")}`, API_URL);
   upstreamUrl.search = request.nextUrl.search;
 
-  const response = await fetch(upstreamUrl, {
-    method: request.method,
-    headers: {
-      "Content-Type": request.headers.get("Content-Type") ?? "application/json",
+  try {
+    const headers = new Headers({
       Accept: request.headers.get("Accept") ?? "application/json",
-    },
-    body: request.method === "GET" || request.method === "HEAD" ? undefined : await request.text(),
-    cache: "no-store",
-  });
+    });
+    const contentType = request.headers.get("Content-Type");
+    if (contentType) {
+      headers.set("Content-Type", contentType);
+    }
 
-  const body = await response.text();
-  return new NextResponse(body, {
-    status: response.status,
-    headers: {
-      "Content-Type": response.headers.get("Content-Type") ?? "application/json",
-    },
-  });
+    const body =
+      request.method === "GET" || request.method === "HEAD" ? undefined : await request.text();
+
+    const response = await fetch(upstreamUrl, {
+      method: request.method,
+      headers,
+      body: body ? body : undefined,
+      cache: "no-store",
+    });
+
+    const responseBody = await response.text();
+    return new NextResponse(responseBody, {
+      status: response.status,
+      headers: {
+        "Content-Type": response.headers.get("Content-Type") ?? "application/json",
+      },
+    });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : "Backend proxy failed.";
+    return NextResponse.json({ detail }, { status: 502 });
+  }
 }
 
 export const GET = proxy;
