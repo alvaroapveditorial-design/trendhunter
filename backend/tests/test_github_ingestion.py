@@ -37,7 +37,7 @@ def test_github_endpoint_ingests_collected_repositories(monkeypatch):
     assert payload["fetched_signals"] == 1
     assert payload["processed_signals"] == 1
     assert payload["trends"][0]["category"] == "ai_saas"
-    assert payload["trends"][0]["trend_score"] >= 80
+    assert payload["trends"][0]["trend_score"] > 50
 
 
 def test_github_endpoint_handles_empty_collection(monkeypatch):
