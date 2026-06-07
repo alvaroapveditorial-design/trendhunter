@@ -34,7 +34,7 @@ class TrendService:
             query = query.filter(Trend.category == category)
 
         if source_type:
-            query = query.join(TrendSource).filter(TrendSource.source_type == source_type)
+            query = query.filter(Trend.sources.any(TrendSource.source_type == source_type))
 
         if q:
             search = f"%{q.lower()}%"
@@ -46,13 +46,7 @@ class TrendService:
                 )
             )
 
-        return (
-            query.distinct()
-            .order_by(Trend.trend_score.desc(), Trend.detected_at.desc())
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
+        return query.order_by(Trend.trend_score.desc(), Trend.detected_at.desc()).offset(skip).limit(limit).all()
 
     def get_trend(self, trend_id_or_slug: str) -> Trend | None:
         return (
