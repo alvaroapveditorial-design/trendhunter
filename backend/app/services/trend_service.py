@@ -25,7 +25,7 @@ class TrendService:
         limit: int = 20,
         skip: int = 0,
     ) -> list[Trend]:
-        query = self.db.query(Trend).filter(
+        query = self.db.query(Trend).options(selectinload(Trend.sources)).filter(
             Trend.is_active.is_(True),
             Trend.trend_score >= min_score,
         )

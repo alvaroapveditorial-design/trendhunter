@@ -106,6 +106,11 @@ class Trend(Base):
     sources = relationship("TrendSource", back_populates="trend", cascade="all, delete-orphan")
     embeddings = relationship("TrendEmbedding", back_populates="trend", cascade="all, delete-orphan")
 
+    @property
+    def primary_source_type(self) -> Optional[str]:
+        """Return the first source type for compact trend list displays."""
+        return self.sources[0].source_type if self.sources else None
+
     __table_args__ = (
         Index("idx_trend_score_active", "trend_score", "is_active"),
         Index("idx_trend_category_active", "category", "is_active"),

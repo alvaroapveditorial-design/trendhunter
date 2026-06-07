@@ -13,6 +13,22 @@ function scoreTone(score: number) {
   return "watch";
 }
 
+function formatDateTime(value?: string | null) {
+  if (!value) return "Pending";
+  return new Intl.DateTimeFormat("en", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+function sourceLabel(source?: string | null) {
+  if (!source) return "No source";
+  if (source === "hackernews") return "Hacker News";
+  if (source === "github") return "GitHub";
+  if (source === "rss") return "RSS";
+  return source.replaceAll("_", " ");
+}
+
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -44,6 +60,7 @@ export default async function DashboardPage({
       : trends[0]?.slug;
   const selectedTrend = selectedSlug ? await getTrend(selectedSlug) : null;
   const topTrend = trends[0];
+  const hasActiveFilters = Boolean(params.q || params.category || params.source_type || params.min_score);
 
   return (
     <main className="shell">
@@ -116,6 +133,11 @@ export default async function DashboardPage({
           />
         </label>
         <button type="submit">Apply</button>
+        {hasActiveFilters ? (
+          <a className="clear-filters" href="/">
+            Clear filters
+          </a>
+        ) : null}
       </form>
 
       <section className="ingestion-panel">
@@ -126,6 +148,10 @@ export default async function DashboardPage({
             Run the detector with sample signals or pull live Hacker News stories. It creates
             or updates trends, sources, scores, opportunities, and agent execution logs.
           </p>
+          <div className="pipeline-meta">
+            <span>Protected ingestion</span>
+            <span>{runs[0] ? `Last run ${formatDateTime(runs[0].completed_at ?? runs[0].started_at)}` : "No runs yet"}</span>
+          </div>
         </div>
         <IngestionActions />
       </section>
@@ -158,6 +184,7 @@ export default async function DashboardPage({
                   </div>
                   <p>{trend.description}</p>
                   <div className="chips">
+                    <span>{sourceLabel(trend.primary_source_type)}</span>
                     <span>{trend.category.replaceAll("_", " ")}</span>
                     <span>{formatNumber(trend.mentions_count)} mentions</span>
                     <span>{formatNumber(trend.engagement_count)} engagement</span>
@@ -210,8 +237,9 @@ export default async function DashboardPage({
                   <div className="source" key={source.id}>
                     <strong>{source.title}</strong>
                     <span>
-                      {source.source_type} · {formatNumber(source.upvotes)} upvotes ·{" "}
+                      {sourceLabel(source.source_type)} · {formatNumber(source.upvotes)} upvotes ·{" "}
                       {formatNumber(source.comments)} comments
+                      {source.published_at ? ` · ${formatDateTime(source.published_at)}` : ""}
                     </span>
                   </div>
                 ))}
@@ -231,6 +259,9 @@ export default async function DashboardPage({
                             {run.records_processed} processed · {run.records_created} created ·{" "}
                             {run.records_updated} updated
                           </span>
+                          <time dateTime={run.completed_at ?? run.started_at}>
+                            {formatDateTime(run.completed_at ?? run.started_at)}
+                          </time>
                         </div>
                         <span className={`run-status ${run.status}`}>{run.status}</span>
                       </div>

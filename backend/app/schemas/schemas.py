@@ -100,6 +100,7 @@ class TrendResponse(TrendBase):
     mentions_count: int
     engagement_count: int
     source_count: int
+    primary_source_type: Optional[str] = None
     is_active: bool
     is_verified: bool
     detected_at: datetime

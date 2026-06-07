@@ -57,6 +57,7 @@ a {
 }
 
 .docs-link,
+.clear-filters,
 .filters button,
 .ingestion-panel button {
   border: 0;
@@ -74,6 +75,7 @@ a {
 }
 
 .docs-link:hover,
+.clear-filters:hover,
 .filters button:hover,
 .ingestion-panel button:hover {
   background: var(--brand-dark);
@@ -108,10 +110,17 @@ a {
 
 .filters {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) 200px 180px 140px auto;
+  grid-template-columns: minmax(220px, 1fr) 200px 180px 140px auto auto;
   align-items: end;
   gap: 12px;
   margin-bottom: 16px;
+}
+
+.clear-filters {
+  align-self: end;
+  background: #eef2ef;
+  color: var(--brand-dark);
+  text-align: center;
 }
 
 .ingestion-panel {
@@ -131,10 +140,26 @@ a {
   font-size: 20px;
 }
 
-.ingestion-panel p:last-child {
+.ingestion-panel p {
   margin: 0;
   color: var(--muted);
   line-height: 1.5;
+}
+
+.pipeline-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.pipeline-meta span {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 8px;
 }
 
 .ingestion-actions {
@@ -425,7 +450,8 @@ a {
   gap: 4px;
 }
 
-.run-row span {
+.run-row span,
+.run-row time {
   color: var(--muted);
   font-size: 13px;
 }

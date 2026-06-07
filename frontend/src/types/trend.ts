@@ -23,6 +23,7 @@ export type Trend = {
   mentions_count: number;
   engagement_count: number;
   source_count: number;
+  primary_source_type?: string | null;
   is_active: boolean;
   is_verified: boolean;
   detected_at: string;

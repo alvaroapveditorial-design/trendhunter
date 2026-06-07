@@ -21,6 +21,7 @@ def test_list_seeded_trends():
     trends = response.json()
     assert len(trends) >= 3
     assert trends[0]["trend_score"] >= trends[-1]["trend_score"]
+    assert "primary_source_type" in trends[0]
 
 
 def test_list_trends_can_filter_by_source_type():
