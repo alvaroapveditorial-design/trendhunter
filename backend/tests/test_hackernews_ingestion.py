@@ -77,6 +77,7 @@ def test_hackernews_item_maps_to_signal():
             "score": 77,
             "descendants": 12,
             "time": 1_700_000_000,
+            "text": "Developers &amp; founders<br>are testing migration copilots.",
         }
     )
 
@@ -85,5 +86,21 @@ def test_hackernews_item_maps_to_signal():
     assert signal.source_id == "42"
     assert signal.upvotes == 77
     assert signal.comments == 12
+    assert signal.content == "Developers & founders are testing migration copilots."
     assert "ai" in signal.keywords
     assert "developer tools" in signal.keywords
+
+
+def test_hackernews_item_truncates_long_text():
+    collector = HackerNewsCollector(base_url="https://example.test")
+    signal = collector._item_to_signal(
+        {
+            "id": 43,
+            "title": "Ask HN: Long launch post",
+            "text": "A" * 2500,
+        }
+    )
+
+    assert signal is not None
+    assert signal.content is not None
+    assert len(signal.content) == 2000

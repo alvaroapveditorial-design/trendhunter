@@ -1,12 +1,16 @@
 """Hacker News collector for public trend signals."""
 
 from datetime import datetime, timezone
+from html import unescape
+import re
 from typing import Any
 
 import httpx
 
 from app.core.config import get_settings
 from app.schemas.schemas import SignalIngest
+
+MAX_SIGNAL_CONTENT_LENGTH = 2000
 
 
 class HackerNewsCollector:
@@ -63,7 +67,7 @@ class HackerNewsCollector:
 
         return SignalIngest(
             title=title,
-            content=item.get("text"),
+            content=self._clean_content(item.get("text")),
             source_type="hackernews",
             source_url=story_url,
             source_id=str(item.get("id")),
@@ -75,6 +79,16 @@ class HackerNewsCollector:
             keywords=keywords,
             published_at=published_at,
         )
+
+    def _clean_content(self, content: str | None) -> str | None:
+        if not content:
+            return None
+
+        cleaned = re.sub(r"<[^>]+>", " ", unescape(content))
+        cleaned = re.sub(r"\s+", " ", cleaned).strip()
+        if len(cleaned) <= MAX_SIGNAL_CONTENT_LENGTH:
+            return cleaned
+        return cleaned[:MAX_SIGNAL_CONTENT_LENGTH].rstrip()
 
     def _keywords_from_title(self, title: str) -> list[str]:
         lowered = title.lower()
