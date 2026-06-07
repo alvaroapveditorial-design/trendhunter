@@ -59,7 +59,9 @@ def _should_hide(trend: Trend) -> bool:
         ]
         if part
     )
-    return any(phrase in text for phrase in LOW_QUALITY_PHRASES)
+    if any(phrase in text for phrase in LOW_QUALITY_PHRASES):
+        return True
+    return (trend.source_count or 0) >= 8 and len(trend.keywords or []) >= 30
 
 
 def _should_retitle(title: str) -> bool:

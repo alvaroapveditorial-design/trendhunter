@@ -80,6 +80,7 @@ STOP_WORDS = {
     "is",
     "it",
     "just",
+    "know",
     "link",
     "longer",
     "make",
