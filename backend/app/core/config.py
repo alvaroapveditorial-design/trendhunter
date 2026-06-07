@@ -60,6 +60,9 @@ class Settings(BaseSettings):
     PRODUCTHUNT_TOKEN: str = ""
     YOUTUBE_API_KEY: str = ""
     GITHUB_TOKEN: str = ""
+    GITHUB_API_URL: str = "https://api.github.com"
+    GITHUB_DEFAULT_LIMIT: int = 10
+    GITHUB_SEARCH_QUERY: str = "topic:ai stars:>50"
     NEWSAPI_KEY: str = ""
     HACKERNEWS_API_URL: str = "https://hacker-news.firebaseio.com/v0"
     HACKERNEWS_DEFAULT_LIMIT: int = 20

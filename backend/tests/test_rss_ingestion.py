@@ -168,6 +168,29 @@ def test_rss_collector_uses_feed_category_fallbacks():
     assert signals[0].category == "product"
 
 
+def test_rss_collector_removes_producthunt_boilerplate():
+    xml = """
+    <rss version="2.0">
+      <channel>
+        <item>
+          <title>Manus Shopify Connector</title>
+          <link>https://example.com/shopify</link>
+          <description>Build and manage Shopify stores from one chat Discussion | Link</description>
+        </item>
+      </channel>
+    </rss>
+    """
+
+    signal = RSSCollector()._parse(
+        xml,
+        feed_key="producthunt",
+        feed_url="https://example.com/feed",
+        limit=1,
+    )[0]
+
+    assert signal.content == "Build and manage Shopify stores from one chat"
+
+
 def test_rss_ingestion_uses_article_title_not_feed_name(monkeypatch):
     def fake_collect(self, feed=None, limit=10):
         return [

@@ -3,9 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import { API_URL } from "@/lib/api";
-
-type ActionKind = "demo" | "hackernews" | "rss";
+type ActionKind = "demo" | "hackernews" | "rss" | "github";
 
 async function runIngestion(kind: ActionKind) {
   const path =
@@ -13,9 +11,11 @@ async function runIngestion(kind: ActionKind) {
       ? "/api/v1/ingestion/demo"
       : kind === "hackernews"
         ? "/api/v1/ingestion/hackernews?feed=top&limit=10"
-        : "/api/v1/ingestion/rss?feed=techcrunch_startups&limit=10";
+        : kind === "rss"
+          ? "/api/v1/ingestion/rss?feed=techcrunch_startups&limit=10"
+          : "/api/v1/ingestion/github?limit=10";
 
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(`/api/backend${path}`, {
     method: "POST",
     cache: "no-store",
   });
@@ -77,6 +77,14 @@ export function IngestionActions() {
         onClick={() => handleRun("rss")}
       >
         {runningAction === "rss" ? "Pulling..." : "Pull RSS"}
+      </button>
+      <button
+        className="secondary-button"
+        disabled={disabled}
+        type="button"
+        onClick={() => handleRun("github")}
+      >
+        {runningAction === "github" ? "Pulling..." : "Pull GitHub"}
       </button>
       {message ? <p className="action-message success">{message}</p> : null}
       {error ? <p className="action-message error">{error}</p> : null}

@@ -123,7 +123,8 @@ class RSSCollector:
 
     def _clean(self, value: str) -> str:
         without_tags = re.sub(r"<[^>]+>", " ", value)
-        normalized = re.sub(r"\s+", " ", html.unescape(without_tags)).strip()
+        without_boilerplate = re.sub(r"\bDiscussion\s*\|\s*Link\b", " ", without_tags, flags=re.IGNORECASE)
+        normalized = re.sub(r"\s+", " ", html.unescape(without_boilerplate)).strip()
         return normalized[:1800]
 
     def _keywords(self, title: str, content: str, feed_key: str) -> list[str]:

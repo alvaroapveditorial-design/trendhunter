@@ -7,7 +7,7 @@ AI Trend Hunter es un MVP SaaS en marcha para detectar tendencias emergentes a p
 Stack real actual:
 - Backend: FastAPI, SQLAlchemy, Pydantic, SQLite local por defecto.
 - Frontend: Next.js 16, React 18, TypeScript, CSS propio.
-- Fuentes reales integradas: Hacker News API pública y RSS/Atom.
+- Fuentes reales integradas: Hacker News API pública, RSS/Atom y GitHub.
 - IA/LLM: configurado como futuro, sin llamadas reales todavía.
 - Auth/billing/queues/vector DB: documentados como visión, no implementados en el MVP actual.
 
@@ -22,6 +22,7 @@ Stack real actual:
 - Ingestion demo.
 - Collector Hacker News sin API key.
 - Collector RSS/Atom sin API key.
+- Collector GitHub con token opcional.
 - Registro de ejecuciones en `agent_executions`.
 - Dashboard Next.js con filtros, detalle, acciones de ingestion e historial reciente.
 - Tests backend de endpoints principales.
@@ -33,7 +34,7 @@ Stack real actual:
 - Auth real.
 - Deploy a un proveedor concreto.
 - Reportes, alertas y favoritos.
-- Integraciones Reddit/GitHub/Product Hunt/RSS.
+- Integraciones Reddit/Product Hunt adicionales.
 - Scoring calibrado con datos reales.
 - Capa LLM para insights avanzados.
 
@@ -43,7 +44,7 @@ Stack real actual:
 - Endpoints de ingestion tienen rate limiting local; falta auth y rate limiting distribuido.
 - Frontend depende de que backend esté en `NEXT_PUBLIC_API_URL`.
 - Hacker News puede fallar por red externa; el frontend todavía no muestra error fino para server actions.
-- No hay tests frontend con navegador.
+- Smoke Playwright cubre el flujo principal desplegado.
 
 ## Prioridades Reales
 
@@ -62,7 +63,7 @@ Stack real actual:
 
 ### P2
 
-- Tests frontend/smoke automatizado.
+- Mantener smoke Playwright automatizado.
 - Mejorar copy y navegación.
 - Validaciones adicionales en ingestion.
 - Limpieza de dependencias no usadas del backend.
@@ -79,11 +80,12 @@ Stack real actual:
 - Detector heurístico antes de LLM para mantener MVP funcional sin credenciales.
 - Hacker News como primera fuente real porque no necesita API key.
 - RSS como segunda fuente real porque amplía cobertura sin credenciales.
+- GitHub como tercera fuente real porque amplía señales dev tools/AI.
 
 ## Orden Recomendado
 
 1. Cerrar loop MVP: fuente real -> ingestion -> scoring -> dashboard -> historial.
-2. Añadir smoke test automatizado de frontend/API.
-3. Elegir target de deploy y ajustar variables.
-4. Validar RSS desplegado y añadir GitHub como tercera fuente pública.
-5. Añadir auth solo cuando haya un flujo beta claro.
+2. Mantener smoke test automatizado de frontend/API.
+3. Añadir auth solo cuando haya un flujo beta claro.
+4. Añadir landing comercial mínima.
+5. Añadir rate limiting distribuido antes de beta pública.

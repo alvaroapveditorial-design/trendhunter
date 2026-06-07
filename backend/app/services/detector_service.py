@@ -44,11 +44,14 @@ STOP_WORDS = {
     "into",
     "is",
     "just",
+    "link",
     "more",
     "new",
+    "now",
     "of",
     "on",
     "or",
+    "problem",
     "right",
     "that",
     "the",
@@ -57,6 +60,7 @@ STOP_WORDS = {
     "uses",
     "using",
     "with",
+    "your",
 }
 
 CATEGORY_KEYWORDS = {

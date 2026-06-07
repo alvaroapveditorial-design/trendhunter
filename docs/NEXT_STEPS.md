@@ -4,11 +4,10 @@
 
 1. Hacer commit inicial del estado actual.
 2. Desplegar en Railway siguiendo `docs/RAILWAY_DEPLOYMENT.md`.
-3. Ejecutar smoke test Railway completo: health, trends, demo ingestion, Hacker News, RSS y dashboard.
+3. Mantener smoke test Playwright verde: dashboard, demo ingestion, Hacker News, RSS, GitHub y runs.
 4. Añadir migraciones incrementales cuando cambie el schema.
-5. Añadir tests frontend/smoke automatizado.
-6. Validar RSS en Railway y después añadir GitHub trending/search como tercera fuente.
-7. Añadir auth y rate limiting distribuido antes de beta pública.
+5. Preparar auth para beta privada.
+6. Añadir rate limiting distribuido antes de beta pública.
 
 ## Siguiente P2
 

@@ -143,7 +143,7 @@ a {
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
-  max-width: 500px;
+  max-width: 620px;
 }
 
 .ingestion-panel form {

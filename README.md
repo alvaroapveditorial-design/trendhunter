@@ -12,7 +12,7 @@ El enfoque del proyecto es privacy-first: fuentes públicas, mínima exposición
 
 - **Detección de tendencias**: monitorización de señales emergentes en fuentes públicas.
 - **Scoring inteligente**: puntuación por momentum, velocidad, oportunidad y saturación.
-- **Pipeline de ingestión**: señales manuales, demo local, collector de Hacker News y feeds RSS.
+- **Pipeline de ingestión**: señales manuales, demo local, collector de Hacker News, feeds RSS y GitHub.
 - **Dashboard MVP**: visualización de tendencias, fuentes, categorías y ejecuciones recientes.
 - **Opportunity finder**: traducción de señales en posibles ideas SaaS o negocios.
 - **Alertas y reportes**: planificados para fases posteriores.
@@ -32,6 +32,7 @@ El repositorio ya incluye un MVP ejecutable:
 - Pipeline heurístico que convierte señales en tendencias puntuadas.
 - Collector de Hacker News para señales públicas reales.
 - Collector RSS/Atom para una segunda fuente pública sin API key.
+- Collector de repositorios GitHub para señales dev/AI.
 - Historial básico de ejecuciones de ingestión.
 - Rate limiting in-memory para endpoints mutables de ingestión.
 - Docker y Alembic configurados para levantar el MVP completo.
@@ -168,6 +169,7 @@ curl -X POST http://localhost:8000/api/v1/ingestion/demo
 curl -X POST "http://localhost:8000/api/v1/ingestion/hackernews?feed=top&limit=10"
 curl http://localhost:8000/api/v1/ingestion/rss/feeds
 curl -X POST "http://localhost:8000/api/v1/ingestion/rss?feed=techcrunch_startups&limit=10"
+curl -X POST "http://localhost:8000/api/v1/ingestion/github?limit=10"
 ```
 
 Documentación automática:
@@ -190,6 +192,7 @@ Documentación automática:
 - `POST /api/v1/ingestion/hackernews?feed=top&limit=10`: recoge historias de Hacker News y las analiza.
 - `GET /api/v1/ingestion/rss/feeds`: lista feeds RSS configurados.
 - `POST /api/v1/ingestion/rss?feed=techcrunch_startups&limit=10`: recoge items RSS/Atom y los analiza.
+- `POST /api/v1/ingestion/github?limit=10`: recoge repositorios públicos de GitHub y los analiza.
 - `GET /api/v1/ingestion/runs`: lista ejecuciones recientes del pipeline.
 
 Los endpoints mutables de `/api/v1/ingestion` están protegidos por rate limiting in-memory. Se configura con `RATE_LIMIT_ENABLED`, `RATE_LIMIT_REQUESTS` y `RATE_LIMIT_PERIOD`.
@@ -254,6 +257,15 @@ Feeds configurados por defecto:
 - `producthunt`
 - `hn_frontpage`
 
+## GitHub Collector
+
+GitHub funciona sin API key para pruebas, aunque `GITHUB_TOKEN` mejora rate limits:
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/ingestion/github?limit=10"
+curl -X POST "http://localhost:8000/api/v1/ingestion/github?q=topic:ai%20stars:%3E100&limit=5"
+```
+
 ---
 
 ## Comandos Del Frontend
@@ -262,11 +274,13 @@ Feeds configurados por defecto:
 cd frontend
 npm run lint
 npm run build
+npm run smoke
 npm run dev
 ```
 
 - `npm run lint`: validación TypeScript.
 - `npm run build`: build de producción de Next.js.
+- `npm run smoke`: smoke E2E con Playwright contra Railway o `PLAYWRIGHT_BASE_URL`.
 - `npm run dev`: servidor local de desarrollo.
 
 ---
@@ -312,6 +326,7 @@ Frontend:
 cd frontend
 npm run lint
 npm run build
+npm run smoke
 ```
 
 ---
@@ -324,6 +339,9 @@ npm run build
 - `HACKERNEWS_DEFAULT_LIMIT`: límite por defecto de historias a recoger.
 - `RSS_DEFAULT_FEED`: feed RSS configurado por defecto.
 - `RSS_FEED_URLS`: feeds RSS en formato `clave=url,clave=url`.
+- `GITHUB_API_URL`: API pública de GitHub.
+- `GITHUB_DEFAULT_LIMIT`: límite por defecto de repositorios a recoger.
+- `GITHUB_SEARCH_QUERY`: query por defecto para GitHub search.
 - `AUTO_CREATE_TABLES`: `true` para comodidad local; en Docker se usa `false`.
 - `RATE_LIMIT_ENABLED`: activa/desactiva rate limiting.
 - `RATE_LIMIT_REQUESTS`: número de requests permitidas por ventana.
@@ -412,6 +430,7 @@ Consulta [.env.example](.env.example) para la configuración completa.
 - [x] Pipeline heurístico local.
 - [x] Collector público de Hacker News.
 - [x] Collector público RSS/Atom.
+- [x] Collector público de GitHub.
 - [x] Tests backend.
 - [x] Build frontend.
 - [x] Target de deploy elegido: Railway.

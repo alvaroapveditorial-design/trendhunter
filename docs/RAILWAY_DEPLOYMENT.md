@@ -53,6 +53,9 @@ HACKERNEWS_API_URL=https://hacker-news.firebaseio.com/v0
 HACKERNEWS_DEFAULT_LIMIT=20
 RSS_DEFAULT_FEED=techcrunch_startups
 RSS_FEED_URLS=techcrunch_startups=https://techcrunch.com/category/startups/feed/,producthunt=https://www.producthunt.com/feed,hn_frontpage=https://hnrss.org/frontpage
+GITHUB_API_URL=https://api.github.com
+GITHUB_DEFAULT_LIMIT=10
+GITHUB_SEARCH_QUERY=topic:ai stars:>50
 RATE_LIMIT_ENABLED=true
 RATE_LIMIT_REQUESTS=100
 RATE_LIMIT_PERIOD=3600
@@ -87,6 +90,7 @@ curl -X POST https://<backend-domain>/api/v1/ingestion/demo
 curl -X POST "https://<backend-domain>/api/v1/ingestion/hackernews?feed=top&limit=10"
 curl https://<backend-domain>/api/v1/ingestion/rss/feeds
 curl -X POST "https://<backend-domain>/api/v1/ingestion/rss?feed=techcrunch_startups&limit=5"
+curl -X POST "https://<backend-domain>/api/v1/ingestion/github?limit=5"
 ```
 
 Then open the frontend domain and verify:
@@ -95,6 +99,7 @@ Then open the frontend domain and verify:
 - `Run demo ingestion` creates or updates trends.
 - `Pull Hacker News` creates or updates trends.
 - `Pull RSS` creates or updates trends.
+- `Pull GitHub` creates or updates trends.
 - `Recent pipeline runs` shows successful runs.
 
 ## 6. Known Production Gaps
@@ -106,8 +111,8 @@ Before external users:
 - Add authentication.
 - Keep PostgreSQL as the production database.
 - Replace in-memory rate limiting with Redis or provider-level protection if running multiple replicas.
-- Add GitHub as a third public source.
-- Add frontend smoke tests.
+- Keep Playwright smoke green after each deploy.
+- Add authentication before private beta.
 
 ## References
 

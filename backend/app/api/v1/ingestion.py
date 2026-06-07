@@ -15,6 +15,7 @@ from app.schemas.schemas import (
     SourceIngestionResponse,
 )
 from app.services.detector_service import DetectorService
+from app.services.github_collector import GitHubCollector
 from app.services.hackernews_collector import HackerNewsCollector
 from app.services.rss_collector import RSSCollector
 
@@ -122,6 +123,42 @@ def ingest_rss(
     return SourceIngestionResponse(
         **result.model_dump(),
         source_type="rss",
+        fetched_signals=len(signals),
+        skipped_signals=max(0, limit - len(signals)),
+    )
+
+
+@router.post("/github", response_model=SourceIngestionResponse, status_code=status.HTTP_201_CREATED)
+def ingest_github(
+    q: str | None = Query(default=None, min_length=2, max_length=160),
+    limit: int = Query(default=10, ge=1, le=30),
+    db: Session = Depends(get_db),
+):
+    """Collect public GitHub repositories and analyze them as trend signals."""
+    try:
+        signals = GitHubCollector().collect(query=q, limit=limit)
+    except httpx.HTTPError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Could not fetch GitHub repositories. Try again later.",
+        ) from exc
+
+    if not signals:
+        return SourceIngestionResponse(
+            processed_signals=0,
+            created_trends=0,
+            updated_trends=0,
+            trend_ids=[],
+            trends=[],
+            source_type="github",
+            fetched_signals=0,
+            skipped_signals=limit,
+        )
+
+    result = DetectorService(db).ingest_batch(SignalBatchIngest(signals=signals))
+    return SourceIngestionResponse(
+        **result.model_dump(),
+        source_type="github",
         fetched_signals=len(signals),
         skipped_signals=max(0, limit - len(signals)),
     )

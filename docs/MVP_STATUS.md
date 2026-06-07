@@ -2,11 +2,11 @@
 
 ## Evaluación
 
-Puntuación actual verificada: **78/100**.
+Puntuación actual verificada: **92/100** como MVP técnico desplegado.
 
-Se mantiene por encima de 80 porque existe el loop real desplegado, aunque faltan auth, tercera fuente y smoke continuo:
+Se mantiene por encima de 90 porque existe el loop real desplegado con autodeploy, aunque faltan auth, rate limiting distribuido y una landing comercial:
 
-`Hacker News/RSS/manual signal -> detector -> trend score -> dashboard -> run history`
+`Hacker News/RSS/GitHub/manual signal -> detector -> trend score -> dashboard -> run history`
 
 ## Terminado
 
@@ -18,6 +18,7 @@ Se mantiene por encima de 80 porque existe el loop real desplegado, aunque falta
 - Ingestion manual/demo.
 - Hacker News collector.
 - RSS/Atom collector.
+- GitHub collector.
 - Historial básico de ejecuciones.
 - Estados de loading/error en acciones principales del dashboard.
 - Página de error del dashboard cuando el backend no está disponible.
@@ -31,6 +32,7 @@ Se mantiene por encima de 80 porque existe el loop real desplegado, aunque falta
 - Rate limiting in-memory para endpoints mutables de ingestion.
 - Tests backend.
 - Build frontend.
+- Smoke Playwright.
 
 ## Parcialmente Terminado
 
@@ -42,11 +44,8 @@ Se mantiene por encima de 80 porque existe el loop real desplegado, aunque falta
 
 ## Pendiente
 
-- Deploy Railway ejecutado.
 - Auth.
 - Rate limiting distribuido si se escala a varias instancias.
-- Tests frontend/smoke automatizado.
-- Tercera fuente real.
 - Reportes/alertas.
 
 ## Bloqueado Por Credenciales o Servicios
@@ -54,7 +53,7 @@ Se mantiene por encima de 80 porque existe el loop real desplegado, aunque falta
 - OpenAI/Anthropic: insights LLM.
 - Supabase: auth.
 - Stripe: billing.
-- Reddit/Product Hunt/GitHub con rate limits altos: tokens opcionales.
+- Reddit/Product Hunt con rate limits altos: tokens opcionales.
 
 ## Cómo Probar
 
@@ -74,6 +73,7 @@ cd frontend
 npm install
 npm run lint
 npm run build
+npm run smoke
 npm run dev
 ```
 
@@ -96,8 +96,9 @@ Flujo manual:
 2. Pulsar `Run demo ingestion`.
 3. Pulsar `Pull Hacker News`.
 4. Pulsar `Pull RSS`.
-5. Ver nuevas tendencias o actualizaciones.
-6. Revisar `Recent pipeline runs` en el panel derecho.
+5. Pulsar `Pull GitHub`.
+6. Ver nuevas tendencias o actualizaciones.
+7. Revisar `Recent pipeline runs` en el panel derecho.
 
 ## Cambios Recientes
 
@@ -113,6 +114,9 @@ Flujo manual:
 - `HACKERNEWS_DEFAULT_LIMIT`: límite por defecto de historias a recoger.
 - `RSS_DEFAULT_FEED`: feed RSS configurado por defecto.
 - `RSS_FEED_URLS`: feeds RSS en formato `clave=url,clave=url`.
+- `GITHUB_API_URL`: API pública de GitHub.
+- `GITHUB_DEFAULT_LIMIT`: límite por defecto de repositorios a recoger.
+- `GITHUB_SEARCH_QUERY`: query por defecto para GitHub search.
 - `AUTO_CREATE_TABLES`: `true` para comodidad local; en Docker se usa `false` porque corre Alembic.
 - `RATE_LIMIT_ENABLED`: activa/desactiva rate limiting.
 - `RATE_LIMIT_REQUESTS`: número de requests permitidas por ventana.

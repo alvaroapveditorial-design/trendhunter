@@ -14,6 +14,7 @@ python -m compileall app tests
 cd frontend
 npm run lint
 npm run build
+npm run smoke
 ```
 
 ## Smoke Test Manual
@@ -37,7 +38,8 @@ npm run dev
 5. Click `Run demo ingestion`.
 6. Click `Pull Hacker News`.
 7. Click `Pull RSS`.
-8. Confirm the dashboard still loads and `Recent pipeline runs` shows successful runs.
+8. Click `Pull GitHub`.
+9. Confirm the dashboard still loads and `Recent pipeline runs` shows successful runs.
 
 ## API Smoke Commands
 
@@ -49,6 +51,7 @@ curl -X POST http://localhost:8000/api/v1/ingestion/demo
 curl -X POST "http://localhost:8000/api/v1/ingestion/hackernews?feed=top&limit=5"
 curl http://localhost:8000/api/v1/ingestion/rss/feeds
 curl -X POST "http://localhost:8000/api/v1/ingestion/rss?feed=techcrunch_startups&limit=5"
+curl -X POST "http://localhost:8000/api/v1/ingestion/github?limit=5"
 ```
 
 Rate limited endpoints return `429` with `Retry-After` after too many mutation
