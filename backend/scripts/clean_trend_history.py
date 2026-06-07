@@ -123,6 +123,29 @@ def clean_history() -> dict[str, int]:
                 trend.last_updated_at = _utcnow()
                 stats["updated"] += 1
 
+        active_by_title: dict[str, list[Trend]] = {}
+        for trend in db.query(Trend).filter(Trend.is_active.is_(True)).all():
+            active_by_title.setdefault(trend.title.strip().lower(), []).append(trend)
+
+        for duplicates in active_by_title.values():
+            if len(duplicates) <= 1:
+                continue
+            keep = max(
+                duplicates,
+                key=lambda trend: (
+                    trend.trend_score or 0,
+                    trend.source_count or 0,
+                    trend.last_updated_at or trend.detected_at,
+                ),
+            )
+            for trend in duplicates:
+                if trend.id == keep.id:
+                    continue
+                trend.is_active = False
+                trend.last_updated_at = _utcnow()
+                stats["hidden"] += 1
+                stats["updated"] += 1
+
         db.commit()
         return stats
     finally:
