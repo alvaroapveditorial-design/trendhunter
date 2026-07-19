@@ -2,9 +2,9 @@
 
 ## Evaluación
 
-Puntuación actual verificada: **92/100** como MVP técnico desplegado.
+Puntuación actual verificada: **95/100** como MVP técnico desplegado.
 
-Se mantiene por encima de 90 porque existe el loop real desplegado con autodeploy, aunque faltan auth, rate limiting distribuido y una landing comercial:
+Se mantiene por encima de 90 porque existe el loop real desplegado con autodeploy, y ahora además hay auth, beta signups y billing implementados de punta a punta. Falta activar credenciales reales de Stripe/Resend en producción y rate limiting distribuido:
 
 `Hacker News/RSS/GitHub/manual signal -> detector -> trend score -> dashboard -> run history`
 
@@ -33,26 +33,32 @@ Se mantiene por encima de 90 porque existe el loop real desplegado con autodeplo
 - Tests backend.
 - Build frontend.
 - Smoke Playwright.
+- Auth passwordless por código de un solo uso enviado por email (`app/api/v1/auth.py`, `app/services/email_service.py`, JWT propio vía `JWT_SECRET`, migración `0004_login_codes.py`).
+- Beta signups (`app/api/v1/beta.py`, migración `0002_beta_signups.py`).
+- Billing con Stripe: checkout session, billing portal y webhook (`app/api/v1/billing.py`, migración `0003_subscriptions.py`).
+- Páginas frontend: `/login`, `/dashboard`, `/pricing`, `/privacy`, `/terms`, componentes `LoginForm`, `PricingCheckout`, `BillingPortalButton`, `LandingInteractions`.
+- Tests backend para auth, beta y billing (11 tests, todos en verde).
 
 ## Parcialmente Terminado
 
 - Producto UX: usable como dashboard, pero sin landing comercial completa.
 - Agentes: hay registro y detector simple, pero no LangGraph real.
 - IA: placeholders/config, sin llamadas LLM.
-- Seguridad: validación básica y rate limiting local; falta auth y rate limiting distribuido.
+- Seguridad: auth propia (JWT + código por email) y rate limiting local ya implementados; falta rate limiting distribuido para multi-instancia.
+- Billing: flujo Stripe completo en código, pero sin credenciales reales (`STRIPE_SECRET_KEY`, `STRIPE_PRO_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`) configuradas en producción, así que checkout/portal no funcionan todavía end-to-end.
+- Email: flujo de código de login completo en código, pero sin `RESEND_API_KEY` configurada en producción no se envían emails reales.
 - Producción: base Docker/Alembic creada, pendiente de endurecer para un proveedor concreto.
 
 ## Pendiente
 
-- Auth.
 - Rate limiting distribuido si se escala a varias instancias.
 - Reportes/alertas.
 
 ## Bloqueado Por Credenciales o Servicios
 
 - OpenAI/Anthropic: insights LLM.
-- Supabase: auth.
-- Stripe: billing.
+- Stripe: activar claves reales (`STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRO_PRICE_ID`) para billing en producción.
+- Resend: activar `RESEND_API_KEY` para envío real de códigos de login.
 - Reddit/Product Hunt con rate limits altos: tokens opcionales.
 
 ## Cómo Probar
@@ -121,6 +127,11 @@ Flujo manual:
 - `RATE_LIMIT_ENABLED`: activa/desactiva rate limiting.
 - `RATE_LIMIT_REQUESTS`: número de requests permitidas por ventana.
 - `RATE_LIMIT_PERIOD`: ventana de rate limit en segundos.
+- `JWT_SECRET`: firma de los tokens de sesión emitidos tras el login por código; debe cambiarse en producción.
+- `RESEND_API_KEY` / `SENDER_EMAIL`: envío de los códigos de login por email.
+- `STRIPE_SECRET_KEY` / `STRIPE_PUBLISHABLE_KEY` / `STRIPE_WEBHOOK_SECRET` / `STRIPE_PRO_PRICE_ID`: billing con Stripe (checkout, portal, webhook).
+- `BILLING_TRIAL_DAYS`: días de trial antes de cobrar.
+- `APP_URL`: URL pública usada en los redirects de Stripe checkout/portal.
 
 ## Rate Limiting
 

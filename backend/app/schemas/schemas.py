@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 # ===== USER SCHEMAS =====
@@ -45,6 +45,128 @@ class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
+
+
+# ===== BETA SIGNUP SCHEMAS =====
+class BetaSignupCreate(BaseModel):
+    """Public landing beta signup payload."""
+
+    email: str = Field(min_length=5, max_length=254, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+    role: str = Field(min_length=2, max_length=80)
+    interests: list[str] = Field(default_factory=list, max_length=10)
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip().lower()
+        return value
+
+    @field_validator("role", mode="before")
+    @classmethod
+    def normalize_role(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip()
+        return value
+
+    @field_validator("interests")
+    @classmethod
+    def normalize_interests(cls, value: list[str]) -> list[str]:
+        cleaned = []
+        for item in value:
+            normalized = item.strip()
+            if normalized and normalized not in cleaned:
+                cleaned.append(normalized[:80])
+        return cleaned
+
+
+class BetaSignupResponse(BaseModel):
+    """Public landing beta signup response."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    email: str
+    role: str
+    interests: list[str]
+    status: str
+    created_at: datetime
+    already_registered: bool = False
+
+
+# ===== BILLING SCHEMAS =====
+class CheckoutSessionCreate(BaseModel):
+    """Request body for Stripe Checkout subscription creation."""
+
+    email: str = Field(min_length=5, max_length=254, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip().lower()
+        return value
+
+
+class CheckoutSessionResponse(BaseModel):
+    """Stripe Checkout redirect response."""
+
+    checkout_url: str
+    session_id: str
+
+
+class BillingPortalCreate(BaseModel):
+    """Request body for Stripe Customer Portal creation."""
+
+    email: str = Field(min_length=5, max_length=254, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip().lower()
+        return value
+
+
+class BillingPortalResponse(BaseModel):
+    """Stripe Customer Portal redirect response."""
+
+    portal_url: str
+
+
+# ===== AUTH SCHEMAS =====
+class LoginCodeRequest(BaseModel):
+    """Request a short-lived login code for an email address."""
+
+    email: str = Field(min_length=5, max_length=254, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip().lower()
+        return value
+
+
+class LoginCodeResponse(BaseModel):
+    """Login code request response."""
+
+    ok: bool = True
+    code: Optional[str] = None
+
+
+class LoginVerifyRequest(LoginCodeRequest):
+    """Verify a login code for an email address."""
+
+    code: str = Field(min_length=6, max_length=6)
+
+
+class AuthSessionResponse(BaseModel):
+    """Authenticated session status."""
+
+    email: str
+    subscription_status: Optional[str] = None
+    has_active_subscription: bool
 
 
 # ===== TREND SCHEMAS =====

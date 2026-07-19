@@ -61,6 +61,52 @@ class User(Base):
     __table_args__ = (Index("idx_user_email", "email"),)
 
 
+class BetaSignup(Base):
+    """Private beta signup captured from the public landing."""
+
+    __tablename__ = "beta_signups"
+
+    id = Column(String, primary_key=True, index=True)
+    email = Column(String, unique=True, index=True, nullable=False)
+    role = Column(String, nullable=False)
+    interests = Column(JSON, default=[])
+    status = Column(String, default="new", index=True)
+    created_at = Column(DateTime, default=_utcnow, index=True)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow)
+
+
+class Subscription(Base):
+    """Stripe subscription state for paid product access."""
+
+    __tablename__ = "subscriptions"
+
+    id = Column(String, primary_key=True, index=True)
+    email = Column(String, index=True, nullable=True)
+    plan = Column(String, default="pro", index=True)
+    status = Column(String, index=True, nullable=False)
+    stripe_customer_id = Column(String, index=True, nullable=True)
+    stripe_subscription_id = Column(String, unique=True, index=True, nullable=True)
+    stripe_checkout_session_id = Column(String, unique=True, index=True, nullable=True)
+    current_period_end = Column(DateTime, nullable=True)
+    trial_end = Column(DateTime, nullable=True)
+    cancel_at_period_end = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=_utcnow, index=True)
+    updated_at = Column(DateTime, default=_utcnow, onupdate=_utcnow)
+
+
+class LoginCode(Base):
+    """Short-lived email login code."""
+
+    __tablename__ = "login_codes"
+
+    id = Column(String, primary_key=True, index=True)
+    email = Column(String, index=True, nullable=False)
+    code_hash = Column(String, nullable=False)
+    expires_at = Column(DateTime, index=True, nullable=False)
+    consumed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=_utcnow, index=True)
+
+
 class Trend(Base):
     """Detected trend model."""
 

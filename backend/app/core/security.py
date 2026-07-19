@@ -1,27 +1,42 @@
 """Security utilities."""
 
+import hashlib
+import hmac
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
-import jwt
-from passlib.context import CryptContext
+from jose import JWTError, jwt
 
 from app.core.config import get_settings
 
 settings = get_settings()
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 def hash_password(password: str) -> str:
     """Hash password using bcrypt."""
+    from passlib.context import CryptContext
+
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     return pwd_context.hash(password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify password against hash."""
+    from passlib.context import CryptContext
+
+    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
     return pwd_context.verify(plain_password, hashed_password)
+
+
+def hash_login_code(email: str, code: str) -> str:
+    """Hash a one-time login code without adding password-hashing dependencies."""
+    message = f"{email}:{code}".encode("utf-8")
+    return hmac.new(settings.SECRET_KEY.encode("utf-8"), message, hashlib.sha256).hexdigest()
+
+
+def verify_login_code_hash(email: str, code: str, code_hash: str) -> bool:
+    """Verify a one-time login code hash."""
+    return hmac.compare_digest(hash_login_code(email, code), code_hash)
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -47,7 +62,7 @@ def decode_token(token: str) -> dict[str, Any]:
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         return payload
-    except jwt.InvalidTokenError:
+    except JWTError:
         return {}
 
 

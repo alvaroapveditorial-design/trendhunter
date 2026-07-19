@@ -82,6 +82,10 @@ class Settings(BaseSettings):
     STRIPE_SECRET_KEY: str = ""
     STRIPE_PUBLISHABLE_KEY: str = ""
     STRIPE_WEBHOOK_SECRET: str = ""
+    STRIPE_PRO_PRICE_ID: str = ""
+    STRIPE_API_URL: str = "https://api.stripe.com"
+    BILLING_TRIAL_DAYS: int = 7
+    APP_URL: str = "http://localhost:3000"
 
     # ===== ANALYTICS =====
     PLAUSIBLE_DOMAIN: str = "trendhunter.io"

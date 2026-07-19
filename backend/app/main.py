@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.v1 import ingestion, trends
+from app.api.v1 import auth, beta, billing, ingestion, trends
 from app.core.config import get_settings
 from app.core.rate_limit import InMemoryRateLimiter
 from app.models.base import Base
@@ -124,6 +124,9 @@ def root():
 # app.include_router(reports.router, prefix="/api/v1/reports", tags=["Reports"])
 app.include_router(trends.router, prefix="/api/v1/trends", tags=["Trends"])
 app.include_router(ingestion.router, prefix="/api/v1/ingestion", tags=["Ingestion"])
+app.include_router(beta.router, prefix="/api/v1/beta", tags=["Beta"])
+app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])
+app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
 
 
 if __name__ == "__main__":

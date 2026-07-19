@@ -6,9 +6,16 @@ const PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000
 
 export const API_URL = typeof window === "undefined" ? SERVER_API_URL : PUBLIC_API_URL;
 
-async function getJson<T>(path: string): Promise<T> {
+export type AuthSession = {
+  email: string;
+  subscription_status?: string | null;
+  has_active_subscription: boolean;
+};
+
+async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     next: { revalidate: 30 },
+    ...init,
   });
 
   if (!response.ok) {
@@ -69,4 +76,11 @@ export function runDemoIngestion(): Promise<IngestionRun> {
 
 export function runHackerNewsIngestion(): Promise<IngestionRun> {
   return postJson<IngestionRun>("/api/v1/ingestion/hackernews?feed=top&limit=10");
+}
+
+export function getCurrentSession(cookieHeader?: string): Promise<AuthSession> {
+  return getJson<AuthSession>("/api/v1/auth/me", {
+    cache: "no-store",
+    headers: cookieHeader ? { Cookie: cookieHeader } : undefined,
+  });
 }

@@ -20,6 +20,10 @@ async function proxy(request: NextRequest, context: RouteContext) {
     if (contentType) {
       headers.set("Content-Type", contentType);
     }
+    const cookie = request.headers.get("Cookie");
+    if (cookie) {
+      headers.set("Cookie", cookie);
+    }
     if (
       INGESTION_API_KEY &&
       request.method !== "GET" &&
@@ -40,12 +44,17 @@ async function proxy(request: NextRequest, context: RouteContext) {
     });
 
     const responseBody = await response.text();
-    return new NextResponse(responseBody, {
+    const proxiedResponse = new NextResponse(responseBody, {
       status: response.status,
       headers: {
         "Content-Type": response.headers.get("Content-Type") ?? "application/json",
       },
     });
+    const setCookie = response.headers.get("Set-Cookie");
+    if (setCookie) {
+      proxiedResponse.headers.set("Set-Cookie", setCookie);
+    }
+    return proxiedResponse;
   } catch (err) {
     const detail = err instanceof Error ? err.message : "Backend proxy failed.";
     return NextResponse.json({ detail }, { status: 502 });
