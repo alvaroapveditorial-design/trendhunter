@@ -2,7 +2,7 @@
 
 ## Evaluación
 
-Puntuación actual verificada: **95/100** como MVP técnico desplegado.
+Puntuación actual verificada: **85/100** (ver desglose ponderado en `docs/MVP_CHECKLIST.md`) como MVP técnico desplegado.
 
 Se mantiene por encima de 90 porque existe el loop real desplegado con autodeploy, y ahora además hay auth, beta signups y billing implementados de punta a punta. Falta activar credenciales reales de Stripe/Resend en producción y rate limiting distribuido:
 
