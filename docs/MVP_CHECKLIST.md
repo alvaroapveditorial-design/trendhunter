@@ -6,36 +6,43 @@ Proyecto evaluado: **AI Trend Hunter**.
 
 ## Evaluación Actual
 
-**Preparación para MVP público: 85/100.**
+**Preparación para MVP público: 87/100.**
 
-Desde la última evaluación (92/100 sobre un alcance más chico) se añadió auth passwordless por email, beta signups y billing con Stripe (checkout, portal, webhook) de punta a punta, con páginas frontend nuevas (`/login`, `/dashboard`, `/pricing`, `/privacy`, `/terms`) y 47 tests backend en verde. La nota no sube más porque **Stripe y Resend aún no tienen credenciales reales en Railway producción** (el código funciona, pero checkout y envío de emails fallarán hasta configurarlas), y porque el rate limiting sigue siendo in-memory (no distribuido).
+Sobre la evaluación anterior (85/100) se resolvieron tres huecos operativos detectados en la revisión de lanzamiento: endpoint admin para ver beta signups, error tracking (Sentry) listo para activarse, y analytics (Plausible) conectado al frontend. La nota no sube más porque **quedan acciones que solo el usuario puede hacer** (credenciales reales de Stripe/Resend/Sentry/Plausible en Railway, dominio propio, revisión legal) y porque el rate limiting sigue siendo in-memory.
 
-## Evidencia Verificada Hoy
+## Resuelto Hoy (Código)
 
-- [x] Backend: `pytest -q` → 47 passed.
-- [x] Frontend: `npm run lint` (tsc --noEmit) → OK.
-- [x] Frontend: `npm run build` → build de producción OK, genera `/`, `/login`, `/pricing`, `/privacy`, `/terms` (estáticas) y `/dashboard` (dinámica).
-- [x] Railway: `railway status` → `trendhunter-backend` y `trendhunter-frontend` Online, Postgres Online.
-- [x] Railway: `GET /health` del backend → `200`.
-- [x] Commit `6e0560a` pusheado a `origin/main` (auth + beta + billing + doc).
-- [x] Confirmado: el deploy activo del backend en Railway corresponde al commit `6e0560a` y corrió las migraciones `0002_beta_signups` → `0003_subscriptions` → `0004_login_codes` contra Postgres.
-- [x] Railway: variables `JWT_SECRET` y `SECRET_KEY` configuradas en producción con valores fuertes (no defaults inseguros).
-- [ ] Railway: variables `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRO_PRICE_ID` — **no configuradas** en producción todavía.
-- [ ] Railway: variable `RESEND_API_KEY` — **no configurada** en producción todavía (sin ella no se envían los códigos de login reales).
-- [ ] Railway: variable `APP_URL` — no configurada explícitamente (usa default `http://localhost:3000`, hay que apuntarla al dominio real del frontend para que los redirects de Stripe funcionen).
+- [x] **Admin endpoint para beta signups**: `GET /api/v1/beta/signups` ([beta.py](../backend/app/api/v1/beta.py)), protegido con header `X-Admin-Key` contra `ADMIN_API_KEY`. Falla cerrado: si la key no está configurada, deniega todo (no expone emails por defecto). 3 tests nuevos.
+- [x] **Sentry gateado por config**: [main.py](../backend/app/main.py) inicializa `sentry_sdk` solo si `SENTRY_DSN` está configurada; sin ella, no cambia nada. Verificado que arranca con y sin DSN.
+- [x] **Plausible conectado**: [layout.tsx](../frontend/src/app/layout.tsx) inyecta el script de Plausible solo si `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` está configurada en el build del frontend.
+- [x] Backend: `pytest -q` → **50 passed** (47 + 3 nuevos de `list_beta_signups`).
+- [x] Frontend: `npm run lint` y `npm run build` → OK (requiere Node ≥20; con Node 18 el build no corre y solo muestra un warning — usar `nvm use 20`).
+
+## Esto Ya No Se Puede Resolver Con Código — Requiere Acción Del Usuario
+
+- [ ] **Stripe real**: crear producto/precio en el dashboard de Stripe y cargar `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRO_PRICE_ID` en Railway.
+- [ ] **Resend real**: cuenta + API key + dominio de envío verificado (SPF/DKIM), cargar `RESEND_API_KEY`/`SENDER_EMAIL` en Railway.
+- [ ] **`APP_URL`**: apuntarla al dominio real del frontend para que los redirects de Stripe funcionen.
+- [ ] **`ADMIN_API_KEY`**: generar un valor fuerte y cargarlo en Railway para poder usar el endpoint de beta signups.
+- [ ] **`SENTRY_DSN`** (opcional pero recomendado): crear proyecto en Sentry y cargar el DSN.
+- [ ] **`NEXT_PUBLIC_PLAUSIBLE_DOMAIN`** (opcional pero recomendado): crear el sitio en Plausible con el dominio real y cargarlo como variable de build del frontend en Railway.
+- [ ] **Dominio propio**: hoy corre en `*.up.railway.app`; para cobrar con tarjeta y enviar emails de login sin oler a spam conviene un dominio propio.
+- [ ] **Revisión legal de `/privacy` y `/terms`**: las páginas ya existen pero dicen explícitamente "responsable pendiente de completar" — hay que rellenar entidad legal, NIF/CIF y domicilio antes de vender públicamente. Esto no lo puedo inventar por ti.
+- [ ] **Backups de Postgres en Railway**: confirmar plan/retención actual.
+- [ ] **Canal de soporte**: un email o chat visible para usuarios de pago.
 
 ## Puntuación Ponderada
 
 | Área | Puntos | Cambio vs. anterior |
 | --- | ---: | --- |
 | Loop principal de producto | 20/25 | = |
-| Backend/API/datos | 18/20 | +1 (auth, beta, billing) |
-| Frontend/dashboard UX | 14/15 | +1 (login, dashboard, pricing, privacy, terms) |
-| Testing y build | 13/15 | +1 (47 tests, cubre auth/beta/billing) |
-| Seguridad y privacidad | 9/10 | +2 (auth propia + ingestion ya protegida con shared key) |
-| Deploy/operación | 6/10 | +1 (confirmado Online en Railway; sigue sin smoke Docker ni rate limit distribuido) |
-| Comercialización/monetización | 5/5 | +1 (billing Stripe + pricing page completos en código) |
-| **Total** | **85/100** | +7 |
+| Backend/API/datos | 18/20 | = |
+| Frontend/dashboard UX | 14/15 | = |
+| Testing y build | 14/15 | +1 (50 tests, cubre el endpoint admin nuevo) |
+| Seguridad y privacidad | 10/10 | +1 (beta signups ya no quedan expuestos sin protección) |
+| Deploy/operación | 6/10 | = (sigue sin smoke Docker ni rate limit distribuido; observabilidad lista pero no activada) |
+| Comercialización/monetización | 5/5 | = |
+| **Total** | **87/100** | +2 |
 
 ## Checklist P0 Antes De Enseñarlo Fuera
 
@@ -44,14 +51,14 @@ Desde la última evaluación (92/100 sobre un alcance más chico) se añadió au
 - [x] Desplegar backend, frontend y Postgres en Railway.
 - [x] Proteger endpoints de ingestion con shared key.
 - [x] Auth passwordless (login por código de email) implementada y testeada.
-- [x] Beta signups implementados y testeados.
+- [x] Beta signups implementados y testeados, con endpoint admin para leerlos.
 - [x] Billing con Stripe (checkout/portal/webhook) implementado y testeado.
 - [x] Landing con pricing, privacy y terms.
+- [x] Error tracking y analytics listos para activarse (Sentry, Plausible).
 - [ ] Ejecutar smoke Docker completo con `docker compose up --build`.
-- [ ] Configurar `STRIPE_SECRET_KEY` / `STRIPE_PUBLISHABLE_KEY` / `STRIPE_WEBHOOK_SECRET` / `STRIPE_PRO_PRICE_ID` reales en Railway.
-- [ ] Configurar `RESEND_API_KEY` real en Railway (o confirmar proveedor de email alternativo).
-- [ ] Configurar `APP_URL` en Railway apuntando al dominio real del frontend.
-- [ ] Verificar en Railway que el deploy activo corresponde al último commit pusheado.
+- [ ] Configurar en Railway: `STRIPE_*`, `RESEND_API_KEY`, `APP_URL`, `ADMIN_API_KEY`, `SENTRY_DSN`, `NEXT_PUBLIC_PLAUSIBLE_DOMAIN`.
+- [ ] Rellenar entidad legal real en `/privacy` y `/terms`.
+- [ ] Dominio propio.
 
 ## Checklist P1 Para Beta Privada
 
@@ -78,37 +85,37 @@ Desde la última evaluación (92/100 sobre un alcance más chico) se añadió au
 
 ## Siguientes Pasos Recomendados (Ejecutables, En Orden)
 
-1. **Activar Stripe en producción:** crear producto/precio real en el dashboard de Stripe, copiar `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRO_PRICE_ID` y configurar el endpoint de webhook para obtener `STRIPE_WEBHOOK_SECRET`; cargar las cuatro en `railway variables --set` para `trendhunter-backend`.
-2. **Activar Resend en producción:** crear cuenta/API key en Resend, verificar el dominio de envío, cargar `RESEND_API_KEY` y `SENDER_EMAIL` en Railway.
-3. **Configurar `APP_URL`:** apuntarla al dominio real del frontend en Railway para que los redirects de Stripe checkout/portal vuelvan al sitio correcto.
-4. ~~**Verificar el deploy post-push**~~ — hecho: el deploy activo ya corre `6e0560a` con las migraciones aplicadas.
-5. **Probar el flujo completo en producción:** signup beta -> login por código de email -> checkout Stripe (test mode) -> webhook actualiza suscripción -> dashboard refleja el estado. Documentar cualquier fallo.
-6. **Smoke Docker:** correr `docker compose up --build` localmente para validar que el stack completo (incluyendo las nuevas rutas) levanta igual que en Railway.
-7. **Rate limiting distribuido:** mover el rate limiter in-memory a Redis antes de escalar a más de una instancia.
+1. **Cargar todas las variables pendientes en Railway** (`STRIPE_*`, `RESEND_API_KEY`, `SENDER_EMAIL`, `APP_URL`, `ADMIN_API_KEY`, `SENTRY_DSN`, `NEXT_PUBLIC_PLAUSIBLE_DOMAIN`) — es el único paso que desbloquea billing, email, observabilidad y el panel de beta signups a la vez.
+2. **Probar el flujo completo en producción:** signup beta -> `curl` a `/api/v1/beta/signups` con `X-Admin-Key` para confirmarlo -> login por código de email -> checkout Stripe (test mode) -> webhook actualiza suscripción -> dashboard refleja el estado.
+3. **Dominio propio + DNS**, y actualizar `APP_URL`/CORS/Resend con el dominio final.
+4. **Rellenar `/privacy` y `/terms`** con la entidad legal real.
+5. **Smoke Docker:** correr `docker compose up --build` localmente para validar que el stack completo levanta igual que en Railway.
+6. **Rate limiting distribuido:** mover el rate limiter in-memory a Redis antes de escalar a más de una instancia.
 
 ## Verificaciones Ejecutadas Hoy
 
 ```bash
 cd backend && python -m pytest -q
-# 47 passed in 0.42s
+# 50 passed
 
-cd frontend && npm run lint
+cd backend && python -c "
+import os; os.environ['SENTRY_DSN'] = 'https://public@sentry.example.com/1'
+from app.main import app
+"
+# Sentry error tracking enabled -- app loads fine with DSN set
+
+nvm use 20 && cd frontend && npm run lint
 # tsc --noEmit -p tsconfig.lint.json -> OK
 
-cd frontend && npm run build
+nvm use 20 && cd frontend && npm run build
 # Next.js build OK: /, /login, /pricing, /privacy, /terms estáticas; /dashboard dinámica
-
-railway status
-# trendhunter-backend Online, trendhunter-frontend Online, Postgres Online
-
-curl -s -o /dev/null -w "%{http_code}\n" https://trendhunter-backend-production.up.railway.app/health
-# 200
 ```
 
 ## Riesgos Principales
 
-- **Billing no funcional en producción todavía:** el código de Stripe está completo y testeado, pero sin credenciales reales configuradas en Railway, cualquier intento de checkout fallará en vivo. No anunciar pricing públicamente hasta completar el paso 1 de "Siguientes Pasos".
-- **Login por email no funcional en producción todavía:** mismo problema con Resend — sin `RESEND_API_KEY`, los códigos de login no llegan. No abrir el login a usuarios reales hasta completar el paso 2.
+- **Billing no funcional en producción todavía:** el código de Stripe está completo y testeado, pero sin credenciales reales configuradas en Railway, cualquier intento de checkout fallará en vivo. No anunciar pricing públicamente hasta completarlo.
+- **Login por email no funcional en producción todavía:** mismo problema con Resend — sin `RESEND_API_KEY`, los códigos de login no llegan. No abrir el login a usuarios reales hasta completarlo.
+- **Beta signups sin panel visible todavía:** el endpoint admin existe pero sin `ADMIN_API_KEY` configurada en Railway sigue sin poder consultarse.
 - **Rate limit local:** suficiente para una instancia, débil para producción multi-instancia.
 - **Sin smoke Docker reciente:** las nuevas rutas (auth/beta/billing) no se han validado en el stack Docker completo, solo en local con `uvicorn --reload` y en Railway.
 - **Sin LLM real:** el scoring heurístico funciona, pero los insights todavía no son suficientemente diferenciales.

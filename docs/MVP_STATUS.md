@@ -2,7 +2,7 @@
 
 ## Evaluación
 
-Puntuación actual verificada: **85/100** (ver desglose ponderado en `docs/MVP_CHECKLIST.md`) como MVP técnico desplegado.
+Puntuación actual verificada: **87/100** (ver desglose ponderado en `docs/MVP_CHECKLIST.md`) como MVP técnico desplegado.
 
 Se mantiene por encima de 90 porque existe el loop real desplegado con autodeploy, y ahora además hay auth, beta signups y billing implementados de punta a punta. Falta activar credenciales reales de Stripe/Resend en producción y rate limiting distribuido:
 
@@ -132,6 +132,9 @@ Flujo manual:
 - `STRIPE_SECRET_KEY` / `STRIPE_PUBLISHABLE_KEY` / `STRIPE_WEBHOOK_SECRET` / `STRIPE_PRO_PRICE_ID`: billing con Stripe (checkout, portal, webhook).
 - `BILLING_TRIAL_DAYS`: días de trial antes de cobrar.
 - `APP_URL`: URL pública usada en los redirects de Stripe checkout/portal.
+- `ADMIN_API_KEY`: protege `GET /api/v1/beta/signups` (header `X-Admin-Key`); si no está configurada, el endpoint deniega todo (falla cerrado, expone emails).
+- `SENTRY_DSN`: si se configura, activa error tracking del backend automáticamente (sin ella, Sentry queda desactivado sin romper nada).
+- `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` (frontend): si se configura, inyecta el script de Plausible en el layout; sin ella no se carga ningún analytics.
 
 ## Rate Limiting
 
