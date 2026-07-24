@@ -2,7 +2,7 @@ import { PricingCheckout } from "@/components/PricingCheckout";
 
 export const metadata = {
   title: "Pricing",
-  description: "Prueba AI Trend Hunter durante 7 dias y continua con el plan Pro.",
+  description: "Try AI Trend Hunter for 7 days and continue with the Pro plan.",
 };
 
 export default function PricingPage() {
@@ -26,7 +26,7 @@ export default function PricingPage() {
           </a>
           <div className="nav__cta">
             <a href="/dashboard" className="btn btn--ghost">
-              Ver dashboard
+              View dashboard
             </a>
           </div>
         </div>
@@ -35,21 +35,20 @@ export default function PricingPage() {
       <section className="section pricing-hero">
         <div className="container pricing-hero__grid">
           <div className="pricing-copy">
-            <span className="eyebrow">Plan Pro</span>
-            <h1 className="display">Prueba AI Trend Hunter durante 7 dias.</h1>
+            <span className="eyebrow">Pro plan</span>
+            <h1 className="display">Try AI Trend Hunter for 7 days.</h1>
             <p className="lead">
-              Detecta oportunidades SaaS emergentes con senales publicas, scoring de
-              tendencias y briefs accionables. Sin plan gratis abierto: una prueba corta
-              para validar valor real.
+              Detect emerging SaaS opportunities with public signals, trend scoring, and
+              actionable briefs. No open free plan: a short trial to validate real value.
             </p>
             <div className="hero__meta">
               <span>
-                <b>39 EUR</b> / mes
+                <b>39 EUR</b> / month
               </span>
               <span>
-                <b>7 dias</b> de prueba
+                <b>7 days</b> trial
               </span>
-              <span>Cancela antes del primer cobro</span>
+              <span>Cancel before the first charge</span>
             </div>
           </div>
 
@@ -57,22 +56,22 @@ export default function PricingPage() {
             <div className="pricing-card__top">
               <span className="tag tag--accent">Pro</span>
               <strong>
-                39 EUR <small>/mes</small>
+                39 EUR <small>/month</small>
               </strong>
-              <p>Primer cobro despues de los 7 dias de prueba.</p>
+              <p>First charge after the 7-day trial.</p>
             </div>
             <ul>
-              <li>Dashboard de tendencias emergentes</li>
-              <li>GitHub, Hacker News y RSS como fuentes iniciales</li>
-              <li>Scores de oportunidad, momentum y saturacion</li>
-              <li>Briefs accionables para ideas SaaS</li>
-              <li>Historial de ejecuciones del pipeline</li>
+              <li>Emerging trends dashboard</li>
+              <li>GitHub, Hacker News, and RSS as initial sources</li>
+              <li>Opportunity, momentum, and saturation scores</li>
+              <li>Actionable briefs for SaaS ideas</li>
+              <li>Pipeline run history</li>
             </ul>
             <PricingCheckout />
             <p className="pricing-card__fineprint">
-              El checkout se procesa con Stripe. El cobro automatico empieza al terminar la
-              prueba si no cancelas antes. Al continuar aceptas los{" "}
-              <a href="/terms">terminos</a> y la <a href="/privacy">politica de privacidad</a>.
+              Checkout is processed with Stripe. Automatic billing starts when the trial
+              ends unless you cancel first. By continuing you accept the{" "}
+              <a href="/terms">terms</a> and <a href="/privacy">privacy policy</a>.
             </p>
           </aside>
         </div>

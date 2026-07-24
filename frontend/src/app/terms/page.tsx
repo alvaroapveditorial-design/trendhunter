@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Terminos",
-  description: "Terminos de servicio de AI Trend Hunter.",
+  title: "Terms",
+  description: "AI Trend Hunter terms of service.",
 };
 
 export default function TermsPage() {
@@ -10,46 +10,46 @@ export default function TermsPage() {
         <a href="/" className="legal-page__back">
           AI Trend Hunter
         </a>
-        <h1>Terminos de servicio</h1>
+        <h1>Terms of service</h1>
         <p>
-          Estos terminos son una base operativa para la beta comercial. Deben revisarse con
-          asesoramiento legal antes de venta publica.
+          These terms are an operational baseline for the commercial beta. They should be
+          reviewed with legal counsel before public sale.
         </p>
 
-        <h2>Servicio</h2>
+        <h2>Service</h2>
         <p>
-          AI Trend Hunter ofrece un dashboard para detectar tendencias SaaS emergentes a
-          partir de fuentes publicas como GitHub, Hacker News y RSS.
+          AI Trend Hunter offers a dashboard to detect emerging SaaS trends from public
+          sources such as GitHub, Hacker News, and RSS.
         </p>
 
-        <h2>Suscripcion y prueba</h2>
+        <h2>Subscription and trial</h2>
         <p>
-          El plan Pro incluye 7 dias de prueba. Al terminar la prueba, Stripe cobrara 39
-          EUR/mes salvo cancelacion previa.
+          The Pro plan includes a 7-day trial. After the trial ends, Stripe charges 39
+          EUR/month unless you cancel first.
         </p>
 
-        <h2>Cancelacion</h2>
+        <h2>Cancellation</h2>
         <p>
-          Puedes cancelar desde el portal de facturacion de Stripe. La cancelacion evita
-          renovaciones futuras, salvo que Stripe indique otra cosa durante el proceso.
+          You can cancel from the Stripe billing portal. Cancellation prevents future
+          renewals, unless Stripe indicates otherwise during the process.
         </p>
 
-        <h2>Uso aceptable</h2>
+        <h2>Acceptable use</h2>
         <p>
-          No esta permitido intentar eludir controles de acceso, abusar de endpoints,
-          revender acceso no autorizado o usar el servicio para actividades ilegales.
+          You may not attempt to bypass access controls, abuse endpoints, resell
+          unauthorized access, or use the service for illegal activities.
         </p>
 
-        <h2>Disponibilidad</h2>
+        <h2>Availability</h2>
         <p>
-          El producto esta en fase MVP/beta. Pueden existir cambios, interrupciones o
-          limitaciones mientras evolucionan fuentes, scoring y funcionalidades.
+          The product is in MVP/beta stage. There may be changes, interruptions, or
+          limitations as sources, scoring, and features evolve.
         </p>
 
-        <h2>Limitacion</h2>
+        <h2>Limitation</h2>
         <p>
-          Los scores y briefs son informacion de apoyo para investigacion y decision, no
-          garantias de exito comercial, financiero o tecnico.
+          Scores and briefs are supporting information for research and decision-making,
+          not guarantees of commercial, financial, or technical success.
         </p>
       </section>
     </main>

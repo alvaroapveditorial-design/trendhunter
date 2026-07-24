@@ -20,11 +20,11 @@ export function BillingPortalButton({ email }: { email: string }) {
       });
       const body = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(body?.detail || "No hemos podido abrir facturacion.");
+        throw new Error(body?.detail || "We couldn't open billing.");
       }
       window.location.href = body.portal_url;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No hemos podido abrir facturacion.");
+      setError(err instanceof Error ? err.message : "We couldn't open billing.");
       setIsLoading(false);
     }
   }
@@ -32,7 +32,7 @@ export function BillingPortalButton({ email }: { email: string }) {
   return (
     <div className="billing-widget">
       <button type="button" onClick={openPortal} disabled={isLoading}>
-        {isLoading ? "Abriendo..." : "Gestionar facturacion"}
+        {isLoading ? "Opening..." : "Manage billing"}
       </button>
       {error ? <span>{error}</span> : null}
     </div>

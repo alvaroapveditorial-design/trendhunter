@@ -23,36 +23,35 @@ export function PricingCheckout() {
       });
       const body = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(body?.detail || "No hemos podido iniciar el checkout.");
+        throw new Error(body?.detail || "We couldn't start checkout.");
       }
       window.location.href = body.checkout_url;
     } catch (err) {
       setIsSubmitting(false);
-      setError(err instanceof Error ? err.message : "No hemos podido iniciar el checkout.");
+      setError(err instanceof Error ? err.message : "We couldn't start checkout.");
     }
   }
 
   return (
     <form className="pricing-checkout" onSubmit={onSubmit}>
-      <label htmlFor="checkout-email">Email de facturación</label>
+      <label htmlFor="checkout-email">Billing email</label>
       <div className="pricing-checkout__row">
         <input
           id="checkout-email"
           name="email"
           type="email"
           autoComplete="email"
-          placeholder="tu@empresa.com"
+          placeholder="you@company.com"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           required
         />
         <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Abriendo Stripe..." : "Empezar prueba"}
+          {isSubmitting ? "Opening Stripe..." : "Start trial"}
         </button>
       </div>
       <p>
-        7 dias gratis. Despues, 39 EUR/mes salvo cancelacion antes de que termine la
-        prueba.
+        7 days free. Then 39 EUR/month unless you cancel before the trial ends.
       </p>
       {error ? <p className="pricing-checkout__error">{error}</p> : null}
     </form>

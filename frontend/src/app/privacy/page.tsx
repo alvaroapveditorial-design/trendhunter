@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Privacidad",
-  description: "Politica de privacidad de AI Trend Hunter.",
+  title: "Privacy",
+  description: "AI Trend Hunter privacy policy.",
 };
 
 export default function PrivacyPage() {
@@ -10,57 +10,55 @@ export default function PrivacyPage() {
         <a href="/" className="legal-page__back">
           AI Trend Hunter
         </a>
-        <h1>Politica de privacidad</h1>
+        <h1>Privacy policy</h1>
         <p>
-          Esta pagina resume como tratamos los datos necesarios para operar AI Trend
-          Hunter. Antes de publicar, sustituye los datos del responsable por la entidad
-          legal real.
+          This page summarizes how we handle the data needed to operate AI Trend Hunter.
+          Before publishing, replace the controller details with the real legal entity.
         </p>
 
-        <h2>Responsable</h2>
+        <h2>Data controller</h2>
         <p>
-          Responsable pendiente de completar: nombre legal, NIF/CIF, domicilio y email de
-          contacto.
+          Controller details pending: legal name, tax ID, address, and contact email.
         </p>
 
-        <h2>Datos tratados</h2>
+        <h2>Data we process</h2>
         <ul>
-          <li>Email de acceso y facturacion.</li>
-          <li>Rol e intereses si solicitas acceso a beta.</li>
-          <li>Estado de suscripcion sincronizado desde Stripe.</li>
-          <li>Datos tecnicos imprescindibles para seguridad y funcionamiento.</li>
+          <li>Login and billing email.</li>
+          <li>Role and interests if you request beta access.</li>
+          <li>Subscription status synced from Stripe.</li>
+          <li>Technical data required for security and operation.</li>
         </ul>
 
-        <h2>Finalidades</h2>
+        <h2>Purposes</h2>
         <ul>
-          <li>Gestionar solicitudes de acceso, login y suscripciones.</li>
-          <li>Permitir acceso al dashboard a usuarios con prueba o suscripcion activa.</li>
-          <li>Enviar codigos de acceso y comunicaciones transaccionales.</li>
+          <li>Managing access requests, login, and subscriptions.</li>
+          <li>Granting dashboard access to users with an active trial or subscription.</li>
+          <li>Sending access codes and transactional communications.</li>
         </ul>
 
-        <h2>Base legal</h2>
+        <h2>Legal basis</h2>
         <p>
-          Ejecucion de contrato o medidas precontractuales para suscripcion/acceso, y
-          consentimiento cuando solicites informacion o acceso a beta.
+          Performance of a contract or pre-contractual steps for subscription/access, and
+          consent when you request information or beta access.
         </p>
 
-        <h2>Pagos</h2>
+        <h2>Payments</h2>
         <p>
-          Los pagos se procesan mediante Stripe. AI Trend Hunter no almacena datos completos
-          de tarjeta.
+          Payments are processed through Stripe. AI Trend Hunter does not store full card
+          data.
         </p>
 
-        <h2>Conservacion</h2>
+        <h2>Retention</h2>
         <p>
-          Conservaremos los datos mientras exista relacion contractual, obligacion legal o
-          hasta que solicites su supresion cuando proceda.
+          We retain data while a contractual relationship or legal obligation exists, or
+          until you request deletion where applicable.
         </p>
 
-        <h2>Derechos</h2>
+        <h2>Your rights</h2>
         <p>
-          Puedes solicitar acceso, rectificacion, supresion, oposicion, limitacion o
-          portabilidad escribiendo al email de contacto que debe completarse antes del
-          lanzamiento.
+          You can request access, rectification, erasure, objection, restriction, or
+          portability by writing to the contact email, which must be completed before
+          launch.
         </p>
       </section>
     </main>

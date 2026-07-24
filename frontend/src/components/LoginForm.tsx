@@ -29,13 +29,13 @@ export function LoginForm() {
       });
       const body = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(body?.detail || "No hemos podido crear el codigo.");
+        throw new Error(body?.detail || "We couldn't create the code.");
       }
       setDevCode(body.code ?? null);
       setStep("code");
-      setMessage("Te hemos enviado un codigo de acceso.");
+      setMessage("We've sent you an access code.");
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "No hemos podido crear el codigo.");
+      setMessage(err instanceof Error ? err.message : "We couldn't create the code.");
     } finally {
       setIsSubmitting(false);
     }
@@ -57,22 +57,22 @@ export function LoginForm() {
       });
       const body = await response.json().catch(() => null);
       if (!response.ok) {
-        throw new Error(body?.detail || "Codigo invalido o caducado.");
+        throw new Error(body?.detail || "Invalid or expired code.");
       }
       window.location.href = body.has_active_subscription ? "/dashboard" : "/pricing";
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Codigo invalido o caducado.");
+      setMessage(err instanceof Error ? err.message : "Invalid or expired code.");
       setIsSubmitting(false);
     }
   }
 
   return (
     <div className="login-card">
-      <span className="eyebrow">Acceso privado</span>
-      <h1>Entra con tu email de suscripcion.</h1>
+      <span className="eyebrow">Private access</span>
+      <h1>Sign in with your subscription email.</h1>
       <p>
-        Usa el mismo email con el que iniciaste la prueba o suscripcion. Si no tienes una,
-        empieza en pricing.
+        Use the same email you used to start your trial or subscription. If you don't have
+        one, start on pricing.
       </p>
 
       {step === "email" ? (
@@ -82,18 +82,18 @@ export function LoginForm() {
             id="login-email"
             type="email"
             autoComplete="email"
-            placeholder="tu@empresa.com"
+            placeholder="you@company.com"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
           />
           <button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Enviando..." : "Enviar codigo"}
+            {isSubmitting ? "Sending..." : "Send code"}
           </button>
         </form>
       ) : (
         <form className="login-form" onSubmit={verifyCode}>
-          <label htmlFor="login-code">Codigo de 6 digitos</label>
+          <label htmlFor="login-code">6-digit code</label>
           <input
             id="login-code"
             inputMode="numeric"
@@ -104,7 +104,7 @@ export function LoginForm() {
             required
           />
           <button type="submit" disabled={isSubmitting || code.length !== 6}>
-            {isSubmitting ? "Verificando..." : "Entrar"}
+            {isSubmitting ? "Verifying..." : "Sign in"}
           </button>
           <button
             type="button"
@@ -115,15 +115,15 @@ export function LoginForm() {
               setDevCode(null);
             }}
           >
-            Cambiar email
+            Change email
           </button>
         </form>
       )}
 
-      {devCode ? <p className="login-card__dev">Codigo dev: {devCode}</p> : null}
+      {devCode ? <p className="login-card__dev">Dev code: {devCode}</p> : null}
       {message ? <p className="login-card__message">{message}</p> : null}
       <a className="login-card__link" href="/pricing">
-        Empezar prueba de 7 dias
+        Start 7-day trial
       </a>
     </div>
   );

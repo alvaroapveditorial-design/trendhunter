@@ -2,7 +2,7 @@ import { LoginForm } from "@/components/LoginForm";
 
 export const metadata = {
   title: "Login",
-  description: "Accede a AI Trend Hunter con tu email de suscripcion.",
+  description: "Sign in to AI Trend Hunter with your subscription email.",
 };
 
 export default function LoginPage() {
@@ -26,7 +26,7 @@ export default function LoginPage() {
           </a>
           <div className="nav__cta">
             <a href="/pricing" className="btn btn--primary">
-              Probar 7 dias
+              Try 7 days
             </a>
           </div>
         </div>

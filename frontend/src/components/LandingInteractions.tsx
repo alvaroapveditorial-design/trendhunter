@@ -101,11 +101,11 @@ export function LandingInteractions() {
 
       const button = document.getElementById("submit-btn") as HTMLButtonElement | null;
       if (button) {
-        button.textContent = "Enviando...";
+        button.textContent = "Sending...";
         button.disabled = true;
       }
       if (formMicro) {
-        formMicro.textContent = "Guardando tu solicitud...";
+        formMicro.textContent = "Saving your request...";
       }
 
       try {
@@ -127,24 +127,24 @@ export function LandingInteractions() {
 
         if (!response.ok) {
           const error = await response.json().catch(() => null);
-          throw new Error(error?.detail || "No hemos podido guardar la solicitud.");
+          throw new Error(error?.detail || "We couldn't save your request.");
         }
 
         form.style.display = "none";
         success.classList.add("is-on");
         const line = document.getElementById("success-line");
-        const picks = interestsVal?.value || "todas las categorias";
+        const picks = interestsVal?.value || "all categories";
         if (line) line.textContent = "-> " + emailEl.value + "  ·  " + picks;
       } catch (error) {
         if (button) {
-          button.textContent = "Solicitar acceso a la beta";
+          button.textContent = "Request beta access";
           button.disabled = false;
         }
         if (formMicro) {
           formMicro.textContent =
             error instanceof Error
               ? error.message
-              : "No hemos podido guardar la solicitud. Intentalo de nuevo.";
+              : "We couldn't save your request. Please try again.";
         }
       }
     };
