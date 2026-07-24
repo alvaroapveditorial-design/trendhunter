@@ -5,7 +5,7 @@ import "./globals.css";
 const PLAUSIBLE_DOMAIN = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://aitrendhunter.com"),
+  metadataBase: new URL("https://aitrendhunter.app"),
   title: {
     default: "AI Trend Hunter",
     template: "%s | AI Trend Hunter",
