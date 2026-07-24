@@ -2,9 +2,9 @@
 
 ## Evaluación
 
-Puntuación actual verificada: **87/100** (ver desglose ponderado en `docs/MVP_CHECKLIST.md`) como MVP técnico desplegado.
+Puntuación actual verificada: **90/100** (ver desglose ponderado en `docs/MVP_CHECKLIST.md`) como MVP técnico desplegado.
 
-Se mantiene por encima de 90 porque existe el loop real desplegado con autodeploy, y ahora además hay auth, beta signups y billing implementados de punta a punta. Falta activar credenciales reales de Stripe/Resend en producción y rate limiting distribuido:
+Dominio propio (`aitrendhunter.app`), Stripe en modo live y Resend enviando emails reales ya están operativos en producción. Falta rellenar el legal real, activar observabilidad (Sentry/Plausible/ADMIN_API_KEY) y mover el rate limiting a algo distribuido:
 
 `Hacker News/RSS/GitHub/manual signal -> detector -> trend score -> dashboard -> run history`
 
