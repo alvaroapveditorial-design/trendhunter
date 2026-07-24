@@ -12,8 +12,15 @@ export default function TermsPage() {
         </a>
         <h1>Terms of service</h1>
         <p>
-          These terms are an operational baseline for the commercial beta. They should be
-          reviewed with legal counsel before public sale.
+          These terms are an operational baseline for the commercial beta.
+        </p>
+
+        <h2>Provider</h2>
+        <p>
+          AI Trend Hunter is operated by Alvaro Perez Varela (self-employed / autónomo),
+          NIF 22753641V, Calle Magallanes 17, 3D, 48903 Barakaldo, Spain.
+          <br />
+          Support and contact: <a href="mailto:alvaroapveditorial@hotmail.com">alvaroapveditorial@hotmail.com</a>
         </p>
 
         <h2>Service</h2>

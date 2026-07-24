@@ -13,12 +13,15 @@ export default function PrivacyPage() {
         <h1>Privacy policy</h1>
         <p>
           This page summarizes how we handle the data needed to operate AI Trend Hunter.
-          Before publishing, replace the controller details with the real legal entity.
         </p>
 
         <h2>Data controller</h2>
         <p>
-          Controller details pending: legal name, tax ID, address, and contact email.
+          Alvaro Perez Varela (self-employed / autónomo), NIF 22753641V.
+          <br />
+          Calle Magallanes 17, 3D, 48903 Barakaldo, Spain.
+          <br />
+          Contact: <a href="mailto:alvaroapveditorial@hotmail.com">alvaroapveditorial@hotmail.com</a>
         </p>
 
         <h2>Data we process</h2>
@@ -57,8 +60,8 @@ export default function PrivacyPage() {
         <h2>Your rights</h2>
         <p>
           You can request access, rectification, erasure, objection, restriction, or
-          portability by writing to the contact email, which must be completed before
-          launch.
+          portability by writing to{" "}
+          <a href="mailto:alvaroapveditorial@hotmail.com">alvaroapveditorial@hotmail.com</a>.
         </p>
       </section>
     </main>
