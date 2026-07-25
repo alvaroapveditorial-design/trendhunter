@@ -1,4 +1,3 @@
-import { IngestionActions } from "@/components/IngestionActions";
 import { BillingPortalButton } from "@/components/BillingPortalButton";
 import { getCategories, getCurrentSession, getIngestionRuns, getSources, getTrend, getTrends } from "@/lib/api";
 import { cookies } from "next/headers";
@@ -153,22 +152,6 @@ export default async function DashboardPage({
           </a>
         ) : null}
       </form>
-
-      <section className="ingestion-panel">
-        <div>
-          <p className="eyebrow">Detection pipeline</p>
-          <h2>Turn public signals into scored trends</h2>
-          <p>
-            Run the detector with sample signals or pull live Hacker News stories. It creates
-            or updates trends, sources, scores, opportunities, and agent execution logs.
-          </p>
-          <div className="pipeline-meta">
-            <span>Protected ingestion</span>
-            <span>{runs[0] ? `Last run ${formatDateTime(runs[0].completed_at ?? runs[0].started_at)}` : "No runs yet"}</span>
-          </div>
-        </div>
-        <IngestionActions />
-      </section>
 
       <section className="workspace">
         <div className="trend-list" aria-label="Trend list">
