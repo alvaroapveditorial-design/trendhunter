@@ -257,8 +257,22 @@ def handle_stripe_event(db: Session, event: dict) -> None:
 
 
 @router.post("/checkout", response_model=CheckoutSessionResponse)
-def create_checkout_session(payload: CheckoutSessionCreate):
+def create_checkout_session(payload: CheckoutSessionCreate, db: Session = Depends(get_db)):
     """Start a Stripe Checkout subscription with a short free trial."""
+    existing = (
+        db.query(Subscription)
+        .filter(
+            Subscription.email == payload.email,
+            Subscription.status.in_(ACTIVE_SUBSCRIPTION_STATUSES),
+        )
+        .first()
+    )
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="You already have an active subscription for this email. Manage it from your dashboard instead of starting a new trial.",
+        )
+
     session = create_stripe_checkout_session(payload.email)
     return CheckoutSessionResponse(
         checkout_url=session["url"],
