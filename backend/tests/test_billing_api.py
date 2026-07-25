@@ -22,8 +22,9 @@ def _stripe_signature(payload: bytes, secret: str) -> str:
 
 
 def test_create_checkout_session(monkeypatch):
-    def fake_create_session(email: str) -> dict:
+    def fake_create_session(email: str, include_trial: bool = True) -> dict:
         assert email == "founder@example.com"
+        assert include_trial is True
         return {
             "id": "cs_test_123",
             "url": "https://checkout.stripe.com/c/pay/cs_test_123",
@@ -130,3 +131,48 @@ def test_stripe_webhook_creates_subscription(monkeypatch):
         assert subscription.stripe_checkout_session_id == session_id
     finally:
         db.close()
+
+
+def test_checkout_blocked_when_subscription_active(monkeypatch):
+    email = f"active-{uuid4()}@example.com"
+    db = SessionLocal()
+    try:
+        db.add(Subscription(id=str(uuid4()), email=email, status="trialing", plan="pro"))
+        db.commit()
+    finally:
+        db.close()
+
+    def fake_create_session(email: str, include_trial: bool = True) -> dict:
+        raise AssertionError("Stripe should not be called when a subscription is already active")
+
+    monkeypatch.setattr(billing, "create_stripe_checkout_session", fake_create_session)
+
+    with TestClient(app) as client:
+        response = client.post("/api/v1/billing/checkout", json={"email": email})
+
+    assert response.status_code == 409
+
+
+def test_checkout_skips_trial_for_returning_email(monkeypatch):
+    email = f"returning-{uuid4()}@example.com"
+    db = SessionLocal()
+    try:
+        db.add(Subscription(id=str(uuid4()), email=email, status="canceled", plan="pro"))
+        db.commit()
+    finally:
+        db.close()
+
+    captured = {}
+
+    def fake_create_session(email: str, include_trial: bool = True) -> dict:
+        captured["email"] = email
+        captured["include_trial"] = include_trial
+        return {"id": "cs_test_returning", "url": "https://checkout.stripe.com/c/pay/cs_test_returning"}
+
+    monkeypatch.setattr(billing, "create_stripe_checkout_session", fake_create_session)
+
+    with TestClient(app) as client:
+        response = client.post("/api/v1/billing/checkout", json={"email": email})
+
+    assert response.status_code == 200
+    assert captured["include_trial"] is False

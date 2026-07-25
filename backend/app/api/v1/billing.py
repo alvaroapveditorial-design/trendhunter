@@ -42,7 +42,7 @@ def _require_stripe_config() -> None:
         )
 
 
-def create_stripe_checkout_session(email: str) -> dict:
+def create_stripe_checkout_session(email: str, include_trial: bool = True) -> dict:
     """Create a Stripe Checkout Session for the Pro subscription."""
     _require_stripe_config()
     success_url = f"{settings.APP_URL.rstrip('/')}/dashboard?checkout=success"
@@ -57,10 +57,11 @@ def create_stripe_checkout_session(email: str) -> dict:
         "billing_address_collection": "auto",
         "line_items[0][price]": settings.STRIPE_PRO_PRICE_ID,
         "line_items[0][quantity]": "1",
-        "subscription_data[trial_period_days]": str(settings.BILLING_TRIAL_DAYS),
         "metadata[plan]": "pro",
         "subscription_data[metadata][plan]": "pro",
     }
+    if include_trial:
+        data["subscription_data[trial_period_days]"] = str(settings.BILLING_TRIAL_DAYS)
 
     with httpx.Client(timeout=15) as client:
         response = client.post(
@@ -258,22 +259,20 @@ def handle_stripe_event(db: Session, event: dict) -> None:
 
 @router.post("/checkout", response_model=CheckoutSessionResponse)
 def create_checkout_session(payload: CheckoutSessionCreate, db: Session = Depends(get_db)):
-    """Start a Stripe Checkout subscription with a short free trial."""
-    existing = (
+    """Start a Stripe Checkout subscription. Grants a free trial only the first time an email is seen."""
+    previous = (
         db.query(Subscription)
-        .filter(
-            Subscription.email == payload.email,
-            Subscription.status.in_(ACTIVE_SUBSCRIPTION_STATUSES),
-        )
+        .filter(Subscription.email == payload.email)
+        .order_by(Subscription.created_at.desc())
         .first()
     )
-    if existing:
+    if previous and previous.status in ACTIVE_SUBSCRIPTION_STATUSES:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="You already have an active subscription for this email. Manage it from your dashboard instead of starting a new trial.",
         )
 
-    session = create_stripe_checkout_session(payload.email)
+    session = create_stripe_checkout_session(payload.email, include_trial=previous is None)
     return CheckoutSessionResponse(
         checkout_url=session["url"],
         session_id=session["id"],
