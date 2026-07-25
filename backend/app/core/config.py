@@ -117,6 +117,8 @@ class Settings(BaseSettings):
     RATE_LIMIT_ENABLED: bool = True
     RATE_LIMIT_REQUESTS: int = 100
     RATE_LIMIT_PERIOD: int = 3600  # 1 hour
+    AUTH_CODE_RATE_LIMIT_REQUESTS: int = 5
+    AUTH_CODE_RATE_LIMIT_PERIOD: int = 900  # 15 minutes
 
     # ===== AGENTS =====
     AGENT_EXECUTION_TIMEOUT: int = 300  # 5 minutes

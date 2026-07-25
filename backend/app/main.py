@@ -37,6 +37,12 @@ rate_limiter = InMemoryRateLimiter(
 )
 RATE_LIMITED_PREFIXES = ("/api/v1/ingestion",)
 
+auth_code_rate_limiter = InMemoryRateLimiter(
+    max_requests=settings.AUTH_CODE_RATE_LIMIT_REQUESTS,
+    period_seconds=settings.AUTH_CODE_RATE_LIMIT_PERIOD,
+)
+AUTH_CODE_RATE_LIMITED_PATH = "/api/v1/auth/request-code"
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application startup and shutdown."""
@@ -71,41 +77,43 @@ app.add_middleware(
 
 @app.middleware("http")
 async def rate_limit_middleware(request, call_next):
-    """Rate limit ingestion writes for the MVP."""
-    should_limit = (
-        settings.RATE_LIMIT_ENABLED
-        and request.method not in {"GET", "HEAD", "OPTIONS"}
-        and request.url.path.startswith(RATE_LIMITED_PREFIXES)
-    )
+    """Rate limit ingestion writes and login code requests for the MVP."""
+    is_write = request.method not in {"GET", "HEAD", "OPTIONS"}
+    if not settings.RATE_LIMIT_ENABLED or not is_write:
+        return await call_next(request)
 
-    if should_limit:
-        forwarded_for = request.headers.get("x-forwarded-for")
-        client_host = forwarded_for.split(",")[0].strip() if forwarded_for else None
-        if not client_host and request.client:
-            client_host = request.client.host
-        key = f"{client_host or 'unknown'}:{request.url.path}"
-        decision = rate_limiter.check(key)
+    if request.url.path == AUTH_CODE_RATE_LIMITED_PATH:
+        limiter, limit = auth_code_rate_limiter, settings.AUTH_CODE_RATE_LIMIT_REQUESTS
+    elif request.url.path.startswith(RATE_LIMITED_PREFIXES):
+        limiter, limit = rate_limiter, settings.RATE_LIMIT_REQUESTS
+    else:
+        return await call_next(request)
 
-        if not decision.allowed:
-            return JSONResponse(
-                status_code=429,
-                content={
-                    "detail": "Rate limit exceeded. Try again later.",
-                    "retry_after": decision.retry_after,
-                },
-                headers={
-                    "Retry-After": str(decision.retry_after),
-                    "X-RateLimit-Limit": str(settings.RATE_LIMIT_REQUESTS),
-                    "X-RateLimit-Remaining": "0",
-                },
-            )
+    forwarded_for = request.headers.get("x-forwarded-for")
+    client_host = forwarded_for.split(",")[0].strip() if forwarded_for else None
+    if not client_host and request.client:
+        client_host = request.client.host
+    key = f"{client_host or 'unknown'}:{request.url.path}"
+    decision = limiter.check(key)
 
-        response = await call_next(request)
-        response.headers["X-RateLimit-Limit"] = str(settings.RATE_LIMIT_REQUESTS)
-        response.headers["X-RateLimit-Remaining"] = str(decision.remaining)
-        return response
+    if not decision.allowed:
+        return JSONResponse(
+            status_code=429,
+            content={
+                "detail": "Rate limit exceeded. Try again later.",
+                "retry_after": decision.retry_after,
+            },
+            headers={
+                "Retry-After": str(decision.retry_after),
+                "X-RateLimit-Limit": str(limit),
+                "X-RateLimit-Remaining": "0",
+            },
+        )
 
-    return await call_next(request)
+    response = await call_next(request)
+    response.headers["X-RateLimit-Limit"] = str(limit)
+    response.headers["X-RateLimit-Remaining"] = str(decision.remaining)
+    return response
 
 
 # ===== HEALTH CHECK =====
