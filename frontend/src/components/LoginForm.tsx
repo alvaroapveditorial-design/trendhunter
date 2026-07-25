@@ -2,6 +2,8 @@
 
 import { FormEvent, useState } from "react";
 
+import { track } from "@/lib/analytics";
+
 type Step = "email" | "code";
 
 export function LoginForm() {
@@ -59,6 +61,7 @@ export function LoginForm() {
       if (!response.ok) {
         throw new Error(body?.detail || "Invalid or expired code.");
       }
+      track("Login");
       window.location.href = body.has_active_subscription ? "/dashboard" : "/pricing";
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Invalid or expired code.");

@@ -1,36 +1,39 @@
 import { expect, test } from "@playwright/test";
 
-const ingestionButtons = [
-  { name: "Run demo ingestion", path: "/api/backend/api/v1/ingestion/demo" },
-  { name: "Pull Hacker News", path: "/api/backend/api/v1/ingestion/hackernews" },
-  { name: "Pull RSS", path: "/api/backend/api/v1/ingestion/rss" },
-  { name: "Pull GitHub", path: "/api/backend/api/v1/ingestion/github" },
-];
+// The dashboard now sits behind email-code auth + an active Stripe
+// subscription (see docs/HANDOFF_CTO.md, section 5). Production never
+// returns the login code to the client, so a full authenticated run
+// through the dashboard isn't something this suite can drive without a
+// real inbox. These smoke tests instead cover the parts of the funnel
+// that are actually reachable unauthenticated after every deploy: the
+// public pages render, and the paywall itself is enforced.
 
-test("dashboard loads and ingestion actions create pipeline runs", async ({ page }) => {
+test("landing page renders with the beta signup form", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "AI Trend Hunter" })).toBeVisible();
-  await expect(page.getByText("Recent pipeline runs")).toBeVisible();
+  await expect(page.locator("#beta-form")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Request beta access" })).toBeVisible();
+});
 
-  for (const action of ingestionButtons) {
-    const button = page.getByRole("button", { name: action.name });
-    await expect(button).toBeEnabled();
+test("pricing page renders the checkout form", async ({ page }) => {
+  await page.goto("/pricing");
 
-    const [response] = await Promise.all([
-      page.waitForResponse(
-        (candidate) =>
-          candidate.url().includes(action.path) && candidate.request().method() === "POST"
-      ),
-      button.click(),
-    ]);
-    const responseBody = await response.text();
-    expect(response.ok(), `${action.name} returned ${response.status()}: ${responseBody}`).toBe(
-      true
-    );
+  await expect(page.getByRole("heading", { name: /Try AI Trend Hunter/i })).toBeVisible();
+  await expect(page.getByLabel("Billing email")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start trial" })).toBeVisible();
+});
 
-    await expect(page.getByText(/signals processed/i)).toBeVisible({ timeout: 30000 });
-  }
+test("login page renders the email code form", async ({ page }) => {
+  await page.goto("/login");
 
-  await expect(page.getByText("Recent pipeline runs")).toBeVisible();
+  await expect(page.getByLabel("Email")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Send code" })).toBeVisible();
+});
+
+test("dashboard redirects unauthenticated visitors instead of leaking data", async ({ page }) => {
+  await page.goto("/dashboard");
+
+  await page.waitForURL(/\/(login|pricing)/);
+  expect(new URL(page.url()).pathname).toMatch(/^\/(login|pricing)$/);
 });

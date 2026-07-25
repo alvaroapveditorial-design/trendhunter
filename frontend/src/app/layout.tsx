@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { ErrorTracking } from "@/components/ErrorTracking";
 import "./globals.css";
 
 const PLAUSIBLE_DOMAIN = process.env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN;
@@ -60,7 +61,10 @@ export default function RootLayout({
           </Script>
         )}
       </head>
-      <body>{children}</body>
+      <body>
+        <ErrorTracking />
+        {children}
+      </body>
     </html>
   );
 }

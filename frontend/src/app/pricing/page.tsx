@@ -1,3 +1,4 @@
+import { PageViewTracker } from "@/components/PageViewTracker";
 import { PricingCheckout } from "@/components/PricingCheckout";
 
 export const metadata = {
@@ -8,6 +9,7 @@ export const metadata = {
 export default function PricingPage() {
   return (
     <main className="landing-page pricing-page">
+      <PageViewTracker event="Pricing Viewed" />
       <header className="nav">
         <div className="container nav__in">
           <a className="brand" href="/">

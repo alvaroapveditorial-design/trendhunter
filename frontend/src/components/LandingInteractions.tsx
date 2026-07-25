@@ -2,8 +2,23 @@
 
 import { useEffect } from "react";
 
+import { track } from "@/lib/analytics";
+
 export function LandingInteractions() {
   useEffect(() => {
+    track("Landing Viewed");
+
+    const onCtaClick = (event: MouseEvent) => {
+      const target = event.target as Element | null;
+      const link = target?.closest<HTMLAnchorElement | HTMLButtonElement>(".btn");
+      if (!link) return;
+      track("CTA Clicked", {
+        label: link.textContent?.trim().slice(0, 60) || "unknown",
+        href: link instanceof HTMLAnchorElement ? link.getAttribute("href") || "" : "",
+      });
+    };
+    document.addEventListener("click", onCtaClick);
+
     const nav = document.getElementById("nav");
     const onScroll = () => {
       if (!nav) return;
@@ -135,6 +150,7 @@ export function LandingInteractions() {
         const line = document.getElementById("success-line");
         const picks = interestsVal?.value || "all categories";
         if (line) line.textContent = "-> " + emailEl.value + "  ·  " + picks;
+        track("Beta Signup Completed", { role: roleEl.value });
       } catch (error) {
         if (button) {
           button.textContent = "Request beta access";
@@ -151,6 +167,7 @@ export function LandingInteractions() {
     form?.addEventListener("submit", onSubmit);
 
     return () => {
+      document.removeEventListener("click", onCtaClick);
       window.removeEventListener("scroll", onScroll);
       burger?.removeEventListener("click", onBurgerClick);
       filters?.removeEventListener("click", onFilterClick);

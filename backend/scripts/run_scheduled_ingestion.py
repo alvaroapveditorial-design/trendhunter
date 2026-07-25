@@ -9,6 +9,7 @@ image, just on its own cron schedule instead of serving HTTP traffic.
 import logging
 from typing import Callable
 
+from app.core.config import get_settings
 from app.models.database import SessionLocal
 from app.schemas.schemas import SignalBatchIngest, SignalIngest
 from app.services.detector_service import DetectorService
@@ -18,6 +19,12 @@ from app.services.rss_collector import RSSCollector
 
 logging.basicConfig(level="INFO")
 logger = logging.getLogger("scheduled_ingestion")
+
+_settings = get_settings()
+if _settings.SENTRY_DSN:
+    import sentry_sdk
+
+    sentry_sdk.init(dsn=_settings.SENTRY_DSN, environment=_settings.ENVIRONMENT)
 
 
 def _run_source(name: str, collect: Callable[[], list[SignalIngest]]) -> None:
@@ -35,8 +42,12 @@ def _run_source(name: str, collect: Callable[[], list[SignalIngest]]) -> None:
             result.created_trends,
             result.updated_trends,
         )
-    except Exception:
+    except Exception as exc:
         logger.exception("%s: ingestion failed", name)
+        if _settings.SENTRY_DSN:
+            import sentry_sdk
+
+            sentry_sdk.capture_exception(exc)
     finally:
         db.close()
 

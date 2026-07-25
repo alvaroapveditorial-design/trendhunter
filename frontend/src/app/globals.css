@@ -59,7 +59,6 @@ a {
 .docs-link,
 .clear-filters,
 .filters button,
-.ingestion-panel button,
 .billing-widget button {
   border: 0;
   border-radius: 8px;
@@ -70,15 +69,9 @@ a {
   padding: 11px 14px;
 }
 
-.ingestion-panel button:disabled {
-  cursor: not-allowed;
-  opacity: 0.65;
-}
-
 .docs-link:hover,
 .clear-filters:hover,
 .filters button:hover,
-.ingestion-panel button:hover,
 .billing-widget button:hover {
   background: var(--brand-dark);
 }
@@ -102,6 +95,21 @@ a {
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
+}
+
+.logout-button {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 600;
+  padding: 10px 14px;
+}
+
+.logout-button:hover {
+  border-color: var(--brand);
+  color: var(--brand);
 }
 
 .billing-widget span {
@@ -149,83 +157,6 @@ a {
   background: #eef2ef;
   color: var(--brand-dark);
   text-align: center;
-}
-
-.ingestion-panel {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  margin-bottom: 16px;
-  padding: 16px;
-}
-
-.ingestion-panel h2 {
-  margin: 4px 0 6px;
-  font-size: 20px;
-}
-
-.ingestion-panel p {
-  margin: 0;
-  color: var(--muted);
-  line-height: 1.5;
-}
-
-.pipeline-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.pipeline-meta span {
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
-  padding: 5px 8px;
-}
-
-.ingestion-actions {
-  display: flex;
-  flex: 0 0 auto;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: flex-end;
-  max-width: 620px;
-}
-
-.ingestion-panel form {
-  flex: 0 0 auto;
-}
-
-.ingestion-panel .secondary-button {
-  background: var(--accent);
-  color: var(--brand-dark);
-}
-
-.ingestion-panel .secondary-button:hover {
-  background: #d5ebdc;
-}
-
-.action-message {
-  flex-basis: 100%;
-  font-size: 13px;
-  line-height: 1.4;
-  margin: 4px 0 0;
-  text-align: right;
-}
-
-.action-message.success {
-  color: var(--brand-dark);
-}
-
-.action-message.error {
-  color: #9b271b;
 }
 
 .app-error,
@@ -509,28 +440,8 @@ a {
   }
 
   .filters,
-  .ingestion-panel,
   .workspace {
     grid-template-columns: 1fr;
-  }
-
-  .ingestion-panel {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .ingestion-actions {
-    justify-content: stretch;
-    max-width: none;
-  }
-
-  .ingestion-actions form,
-  .ingestion-actions button {
-    width: 100%;
-  }
-
-  .action-message {
-    text-align: left;
   }
 
   .detail-panel {

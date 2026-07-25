@@ -2,6 +2,8 @@
 
 import { FormEvent, useState } from "react";
 
+import { track } from "@/lib/analytics";
+
 export function PricingCheckout() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -11,6 +13,8 @@ export function PricingCheckout() {
     event.preventDefault();
     setError("");
     setIsSubmitting(true);
+    track("Sign Up Started");
+    track("Checkout Started");
 
     try {
       const response = await fetch("/api/backend/api/v1/billing/checkout", {
@@ -28,7 +32,9 @@ export function PricingCheckout() {
       window.location.href = body.checkout_url;
     } catch (err) {
       setIsSubmitting(false);
-      setError(err instanceof Error ? err.message : "We couldn't start checkout.");
+      const message = err instanceof Error ? err.message : "We couldn't start checkout.";
+      setError(message);
+      track("Checkout Failed", { reason: message.slice(0, 120) });
     }
   }
 
