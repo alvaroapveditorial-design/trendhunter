@@ -80,7 +80,6 @@ export default async function DashboardPage({
     <main className="shell">
       <header className="topbar">
         <div>
-          <p className="eyebrow">MVP Dashboard</p>
           <h1>AI Trend Hunter</h1>
         </div>
         <div className="topbar-actions">
