@@ -66,6 +66,95 @@ def test_github_endpoint_returns_bad_gateway_on_fetch_error(monkeypatch):
     assert response.json()["detail"] == "Could not fetch GitHub repositories. Try again later."
 
 
+def test_github_distinct_repos_never_merge_into_one_trend(monkeypatch):
+    """Regression test: two unrelated repos must never collapse into one trend,
+    even if their titles happen to guess the same or a generic word."""
+
+    def fake_collect(self, query=None, limit=10):
+        return [
+            SignalIngest(
+                title="Snailclimb/JavaGuide",
+                content="Java interview & backend guide covering fundamentals and system design.",
+                source_type="github",
+                source_url="https://github.com/Snailclimb/JavaGuide",
+                source_id="132464395",
+                upvotes=156000,
+                comments=59,
+                keywords=["java", "interview"],
+                category="ai_saas",
+            ),
+            SignalIngest(
+                title="langgenius/dify",
+                content="Production-ready platform for agentic workflow development.",
+                source_type="github",
+                source_url="https://github.com/langgenius/dify",
+                source_id="626805178",
+                upvotes=144000,
+                comments=741,
+                keywords=["agent", "workflow"],
+                category="ai_saas",
+            ),
+        ]
+
+    monkeypatch.setattr(GitHubCollector, "collect", fake_collect)
+
+    with TestClient(app) as client:
+        response = client.post("/api/v1/ingestion/github?limit=2")
+
+    assert response.status_code == 201
+    trends = response.json()["trends"]
+    trend_ids = {trend["id"] for trend in trends}
+    assert len(trend_ids) == 2, "each repo must land on its own trend, not merge into one"
+
+
+def test_github_same_repo_maps_to_same_trend_across_runs(monkeypatch):
+    """Regression test: re-ingesting the same repo (same source_id) must always
+    update the trend it was already attached to, even if the title heuristic
+    would guess something different on a later run."""
+
+    def first_run(self, query=None, limit=10):
+        return [
+            SignalIngest(
+                title="Snailclimb/JavaGuide",
+                content="Java interview & backend guide.",
+                source_type="github",
+                source_url="https://github.com/Snailclimb/JavaGuide",
+                source_id="132464395",
+                upvotes=156000,
+                comments=59,
+                keywords=["java", "interview"],
+                category="ai_saas",
+            )
+        ]
+
+    monkeypatch.setattr(GitHubCollector, "collect", first_run)
+    with TestClient(app) as client:
+        first = client.post("/api/v1/ingestion/github?limit=1")
+        first_trend = first.json()["trends"][0]
+
+        def second_run(self, query=None, limit=10):
+            return [
+                SignalIngest(
+                    title="Snailclimb/JavaGuide",
+                    content="Now trending with AI application development sections added.",
+                    source_type="github",
+                    source_url="https://github.com/Snailclimb/JavaGuide",
+                    source_id="132464395",
+                    upvotes=160000,
+                    comments=61,
+                    keywords=["agent", "ai"],
+                    category="ai_saas",
+                )
+            ]
+
+        monkeypatch.setattr(GitHubCollector, "collect", second_run)
+        second = client.post("/api/v1/ingestion/github?limit=1")
+        second_trend = second.json()["trends"][0]
+
+    assert second_trend["id"] == first_trend["id"]
+    assert second_trend["title"] == first_trend["title"]
+
+
 def test_github_repo_maps_to_signal():
     collector = GitHubCollector(base_url="https://example.test")
     signal = collector._repo_to_signal(

@@ -249,18 +249,17 @@ class DetectorService:
         keywords = self._keywords(signal)
         category = signal.category or self._infer_category(keywords)
         title = self._trend_title(signal, keywords)
-        slug = slugify(title)
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         engagement = self._signal_engagement(signal)
 
-        trend = self.db.query(Trend).filter(Trend.slug == slug).first()
+        trend = self._find_existing_trend(signal, title)
         was_created = trend is None
 
         if trend is None:
             trend = Trend(
                 id=str(uuid4()),
                 title=title,
-                slug=slug,
+                slug=self._unique_slug(slugify(title)),
                 description=signal.content or signal.title,
                 category=category,
                 keywords=keywords,
@@ -274,6 +273,38 @@ class DetectorService:
         self._add_source_if_needed(trend, signal)
         self._recalculate_trend(trend, signal, engagement, keywords, category)
         return trend, was_created
+
+    def _find_existing_trend(self, signal: SignalIngest, title: str) -> Trend | None:
+        """Match a signal to an existing trend.
+
+        A concrete source (e.g. one GitHub repo) always maps back to whichever
+        trend it was already attached to, regardless of how the title heuristic
+        scores it on this run -- prevents the same repo from splitting into two
+        trends, or two unrelated repos merging because they guessed the same title.
+        GitHub signals never fall back to title-slug matching: a repo is its own
+        entity and should never cluster with another repo by guessed title alone.
+        """
+        source_id = signal.source_id or slugify(f"{signal.source_type}-{signal.title}")
+        existing_source = (
+            self.db.query(TrendSource)
+            .filter(TrendSource.source_type == signal.source_type, TrendSource.source_id == source_id)
+            .first()
+        )
+        if existing_source:
+            return self.db.query(Trend).filter(Trend.id == existing_source.trend_id).first()
+
+        if signal.source_type == "github":
+            return None
+
+        return self.db.query(Trend).filter(Trend.slug == slugify(title)).first()
+
+    def _unique_slug(self, base_slug: str) -> str:
+        slug = base_slug
+        suffix = 2
+        while self.db.query(Trend).filter(Trend.slug == slug).first() is not None:
+            slug = f"{base_slug}-{suffix}"
+            suffix += 1
+        return slug
 
     def _add_source_if_needed(self, trend: Trend, signal: SignalIngest) -> None:
         source_id = signal.source_id or slugify(f"{signal.source_type}-{signal.title}")
