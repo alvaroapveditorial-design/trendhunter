@@ -92,6 +92,11 @@ class Settings(BaseSettings):
     PLAUSIBLE_DOMAIN: str = "trendhunter.io"
     ANALYTICS_ENABLED: bool = True
 
+    # ===== META CONVERSIONS API =====
+    META_PIXEL_ID: str = ""
+    META_CAPI_ACCESS_TOKEN: str = ""
+    META_GRAPH_API_URL: str = "https://graph.facebook.com/v21.0"
+
     # ===== CELERY =====
     CELERY_BROKER_URL: str = "redis://localhost:6379/1"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"

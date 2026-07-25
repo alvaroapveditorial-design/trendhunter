@@ -20,6 +20,7 @@ from app.schemas.schemas import (
     CheckoutSessionCreate,
     CheckoutSessionResponse,
 )
+from app.services.meta_capi import send_capi_event
 
 router = APIRouter()
 settings = get_settings()
@@ -189,13 +190,24 @@ def _upsert_subscription(
     return subscription
 
 
+def _subscription_amount(data_object: dict) -> tuple[float, str] | tuple[None, None]:
+    items = data_object.get("items", {}).get("data", [])
+    price = items[0].get("price", {}) if items else {}
+    unit_amount = price.get("unit_amount")
+    currency = price.get("currency")
+    if unit_amount is None or not currency:
+        return None, None
+    return unit_amount / 100, currency.upper()
+
+
 def handle_stripe_event(db: Session, event: dict) -> None:
     """Persist subscription state from relevant Stripe webhook events."""
     event_type = event.get("type")
+    event_id = event.get("id") or ""
     data_object = event.get("data", {}).get("object", {})
 
     if event_type == "checkout.session.completed":
-        _upsert_subscription(
+        subscription = _upsert_subscription(
             db,
             email=data_object.get("customer_email"),
             status_value=data_object.get("subscription_status") or "trialing",
@@ -203,19 +215,45 @@ def handle_stripe_event(db: Session, event: dict) -> None:
             stripe_subscription_id=data_object.get("subscription"),
             stripe_checkout_session_id=data_object.get("id"),
         )
+        send_capi_event(
+            "StartTrial",
+            email=subscription.email,
+            event_id=event_id,
+            event_source_url=f"{settings.APP_URL.rstrip('/')}/pricing",
+        )
         return
 
     if event_type in {"customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted"}:
-        _upsert_subscription(
+        stripe_subscription_id = data_object.get("id")
+        previous_status = (
+            db.query(Subscription)
+            .filter(Subscription.stripe_subscription_id == stripe_subscription_id)
+            .first()
+        )
+        previous_status = previous_status.status if previous_status else None
+
+        new_status = data_object.get("status", "incomplete")
+        subscription = _upsert_subscription(
             db,
             email=None,
-            status_value=data_object.get("status", "incomplete"),
+            status_value=new_status,
             stripe_customer_id=data_object.get("customer"),
-            stripe_subscription_id=data_object.get("id"),
+            stripe_subscription_id=stripe_subscription_id,
             current_period_end=_utc_from_stripe_timestamp(data_object.get("current_period_end")),
             trial_end=_utc_from_stripe_timestamp(data_object.get("trial_end")),
             cancel_at_period_end=bool(data_object.get("cancel_at_period_end", False)),
         )
+
+        if previous_status == "trialing" and new_status == "active":
+            value, currency = _subscription_amount(data_object)
+            custom_data = {"currency": currency, "value": value} if value is not None else {}
+            send_capi_event(
+                "Purchase",
+                email=subscription.email,
+                event_id=event_id,
+                event_source_url=f"{settings.APP_URL.rstrip('/')}/dashboard",
+                custom_data=custom_data,
+            )
 
 
 @router.post("/checkout", response_model=CheckoutSessionResponse)
