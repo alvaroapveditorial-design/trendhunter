@@ -1,7 +1,7 @@
 # ========== CORE MVP DEPENDENCIES ==========
-fastapi==0.109.0
+fastapi==0.109.1
 uvicorn[standard]==0.27.0
-python-dotenv==1.0.0
+python-dotenv==1.2.2
 pydantic==2.5.3
 pydantic-settings==2.1.0
 
@@ -12,20 +12,20 @@ alembic==1.13.1
 
 # ========== API & HTTP ==========
 httpx==0.25.1
-requests==2.31.0
+requests==2.33.0
 
 # ========== AUTH/SECURITY UTILITIES ==========
-passlib[bcrypt]==1.7.4
-PyJWT==2.8.0
-python-jose[cryptography]==3.3.0
-cryptography==41.0.7
+# passlib/PyJWT removed: dead code, the real session/login-code auth in
+# app/core/security.py only ever used python-jose (see docs/HANDOFF_CTO.md).
+python-jose[cryptography]==3.4.0
+cryptography==43.0.1
 
 # ========== UTILITIES ==========
-python-multipart==0.0.6
+python-multipart==0.0.18
 pytz==2023.3.post1
 attrs==23.2.0
 structlog==24.1.0
-sentry-sdk==1.39.1
+sentry-sdk==1.45.1
 
 # ========== TESTING ==========
 pytest==7.4.3

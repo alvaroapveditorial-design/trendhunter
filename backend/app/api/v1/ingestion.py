@@ -3,10 +3,11 @@
 from xml.etree import ElementTree
 
 import httpx
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+import sentry_sdk
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.core.config import get_settings
+from app.api.deps import require_ingestion_key
 from app.models.base import AgentExecution
 from app.models.database import get_db
 from app.schemas.schemas import (
@@ -21,16 +22,6 @@ from app.services.hackernews_collector import HackerNewsCollector
 from app.services.rss_collector import RSSCollector
 
 router = APIRouter()
-
-
-def require_ingestion_key(x_ingestion_key: str | None = Header(default=None)) -> None:
-    """Require a shared secret for ingestion mutations when configured."""
-    expected_key = get_settings().INGESTION_API_KEY
-    if expected_key and x_ingestion_key != expected_key:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Ingestion key required.",
-        )
 
 
 @router.get("/runs", response_model=list[AgentExecutionResponse])
@@ -84,6 +75,7 @@ def ingest_hackernews(
     try:
         signals = HackerNewsCollector().collect(feed=feed, limit=limit)
     except httpx.HTTPError as exc:
+        sentry_sdk.capture_exception(exc)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Could not fetch Hacker News stories. Try again later.",
@@ -133,6 +125,7 @@ def ingest_rss(
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     except (httpx.HTTPError, ElementTree.ParseError) as exc:
+        sentry_sdk.capture_exception(exc)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Could not fetch RSS feed. Try again later.",
@@ -174,6 +167,7 @@ def ingest_github(
     try:
         signals = GitHubCollector().collect(query=q, limit=limit)
     except httpx.HTTPError as exc:
+        sentry_sdk.capture_exception(exc)
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Could not fetch GitHub repositories. Try again later.",

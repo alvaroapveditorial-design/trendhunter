@@ -1,4 +1,8 @@
 import { BillingPortalButton } from "@/components/BillingPortalButton";
+import { DashboardFilterAnalytics } from "@/components/DashboardFilterAnalytics";
+import { LogoutButton } from "@/components/LogoutButton";
+import { PageViewTracker } from "@/components/PageViewTracker";
+import { TrendDetailAnalytics } from "@/components/TrendDetailAnalytics";
 import { getCategories, getCurrentSession, getIngestionRuns, getSources, getTrend, getTrends } from "@/lib/api";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -77,13 +81,16 @@ export default async function DashboardPage({
 
   return (
     <main className="shell">
+      <PageViewTracker event="Dashboard Viewed" />
+      <DashboardFilterAnalytics />
       <header className="topbar">
         <div>
           <h1>AI Trend Hunter</h1>
         </div>
         <div className="topbar-actions">
           <span>{session.email}</span>
-          <BillingPortalButton email={session.email} />
+          <BillingPortalButton />
+          <LogoutButton />
         </div>
       </header>
 
@@ -195,6 +202,11 @@ export default async function DashboardPage({
         <aside className="detail-panel">
           {selectedTrend ? (
             <>
+              <TrendDetailAnalytics
+                slug={selectedTrend.slug}
+                category={selectedTrend.category}
+                hasOpportunities={selectedTrend.saas_opportunities.length > 0}
+              />
               <p className="eyebrow">Opportunity brief</p>
               <h2>{selectedTrend.title}</h2>
               <p className="detail-description">{selectedTrend.description}</p>

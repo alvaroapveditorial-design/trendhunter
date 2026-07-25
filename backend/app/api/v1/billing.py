@@ -8,24 +8,27 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 import httpx
+import sentry_sdk
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
+from app.api.deps import require_session_email
 from app.core.config import get_settings
 from app.models.base import Subscription
 from app.models.database import get_db
 from app.schemas.schemas import (
-    BillingPortalCreate,
     BillingPortalResponse,
     CheckoutSessionCreate,
     CheckoutSessionResponse,
 )
 from app.services.meta_capi import send_capi_event
+from app.services.plausible_events import send_plausible_event
 
 router = APIRouter()
 settings = get_settings()
 
 ACTIVE_SUBSCRIPTION_STATUSES = {"active", "trialing"}
+EXPIRED_TRIAL_STATUSES = {"past_due", "unpaid", "canceled", "incomplete_expired"}
 
 
 def _utc_from_stripe_timestamp(value: int | None) -> datetime | None:
@@ -71,6 +74,10 @@ def create_stripe_checkout_session(email: str, include_trial: bool = True) -> di
         )
 
     if response.status_code >= 400:
+        sentry_sdk.capture_message(
+            f"Stripe checkout session rejected: {response.status_code} {response.text[:300]}",
+            level="error",
+        )
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Stripe rejected the checkout session request.",
@@ -99,6 +106,10 @@ def create_stripe_billing_portal_session(customer_id: str) -> dict:
         )
 
     if response.status_code >= 400:
+        sentry_sdk.capture_message(
+            f"Stripe billing portal session rejected: {response.status_code} {response.text[:300]}",
+            level="error",
+        )
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Stripe rejected the billing portal request.",
@@ -208,10 +219,11 @@ def handle_stripe_event(db: Session, event: dict) -> None:
     data_object = event.get("data", {}).get("object", {})
 
     if event_type == "checkout.session.completed":
+        new_status = data_object.get("subscription_status") or "trialing"
         subscription = _upsert_subscription(
             db,
             email=data_object.get("customer_email"),
-            status_value=data_object.get("subscription_status") or "trialing",
+            status_value=new_status,
             stripe_customer_id=data_object.get("customer"),
             stripe_subscription_id=data_object.get("subscription"),
             stripe_checkout_session_id=data_object.get("id"),
@@ -221,6 +233,10 @@ def handle_stripe_event(db: Session, event: dict) -> None:
             email=subscription.email,
             event_id=event_id,
             event_source_url=f"{settings.APP_URL.rstrip('/')}/pricing",
+        )
+        send_plausible_event(
+            "Trial Started" if new_status == "trialing" else "Checkout Completed",
+            path="/pricing",
         )
         return
 
@@ -255,6 +271,9 @@ def handle_stripe_event(db: Session, event: dict) -> None:
                 event_source_url=f"{settings.APP_URL.rstrip('/')}/dashboard",
                 custom_data=custom_data,
             )
+            send_plausible_event("Trial Converted", path="/dashboard")
+        elif previous_status == "trialing" and new_status in EXPIRED_TRIAL_STATUSES:
+            send_plausible_event("Trial Expired", path="/dashboard", props={"status": new_status})
 
 
 @router.post("/checkout", response_model=CheckoutSessionResponse)
@@ -280,11 +299,20 @@ def create_checkout_session(payload: CheckoutSessionCreate, db: Session = Depend
 
 
 @router.post("/portal", response_model=BillingPortalResponse)
-def create_billing_portal(payload: BillingPortalCreate, db: Session = Depends(get_db)):
-    """Create a Stripe Customer Portal session for an existing subscriber."""
+def create_billing_portal(
+    email: str = Depends(require_session_email),
+    db: Session = Depends(get_db),
+):
+    """Create a Stripe Customer Portal session for the authenticated user's own subscription.
+
+    The email is taken exclusively from the signed session cookie, never from
+    the request body -- this used to trust a client-supplied email, which let
+    anyone who knew a customer's email address obtain a live link to that
+    customer's Stripe billing portal (view invoices, change card, cancel).
+    """
     subscription = (
         db.query(Subscription)
-        .filter(Subscription.email == payload.email, Subscription.stripe_customer_id.is_not(None))
+        .filter(Subscription.email == email, Subscription.stripe_customer_id.is_not(None))
         .order_by(Subscription.created_at.desc())
         .first()
     )

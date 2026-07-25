@@ -2,6 +2,7 @@
 
 from fastapi.testclient import TestClient
 
+from app.core.config import get_settings
 from app.main import app
 
 
@@ -60,3 +61,38 @@ def test_list_sources():
 
     assert response.status_code == 200
     assert "demo" in response.json()
+
+
+def test_create_trend_requires_ingestion_key_when_configured(monkeypatch):
+    monkeypatch.setenv("INGESTION_API_KEY", "test-ingestion-key")
+    get_settings.cache_clear()
+
+    payload = {"title": "Manual trend", "slug": "manual-trend-key-test", "category": "ai_saas"}
+    try:
+        with TestClient(app) as client:
+            unauthed = client.post("/api/v1/trends", json=payload)
+            authed = client.post(
+                "/api/v1/trends",
+                json=payload,
+                headers={"X-Ingestion-Key": "test-ingestion-key"},
+            )
+    finally:
+        get_settings.cache_clear()
+
+    assert unauthed.status_code == 401
+    assert authed.status_code == 201
+
+
+def test_trend_reads_require_internal_key_when_configured(monkeypatch):
+    monkeypatch.setenv("BACKEND_INTERNAL_KEY", "test-internal-key")
+    get_settings.cache_clear()
+
+    try:
+        with TestClient(app) as client:
+            unauthed = client.get("/api/v1/trends")
+            authed = client.get("/api/v1/trends", headers={"X-Internal-Key": "test-internal-key"})
+    finally:
+        get_settings.cache_clear()
+
+    assert unauthed.status_code == 401
+    assert authed.status_code == 200

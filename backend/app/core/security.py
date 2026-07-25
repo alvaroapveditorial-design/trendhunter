@@ -12,22 +12,6 @@ from app.core.config import get_settings
 settings = get_settings()
 
 
-def hash_password(password: str) -> str:
-    """Hash password using bcrypt."""
-    from passlib.context import CryptContext
-
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    return pwd_context.hash(password)
-
-
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify password against hash."""
-    from passlib.context import CryptContext
-
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    return pwd_context.verify(plain_password, hashed_password)
-
-
 def hash_login_code(email: str, code: str) -> str:
     """Hash a one-time login code without adding password-hashing dependencies."""
     message = f"{email}:{code}".encode("utf-8")

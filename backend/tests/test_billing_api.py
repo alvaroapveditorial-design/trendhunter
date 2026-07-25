@@ -8,7 +8,9 @@ from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
+from app.api.deps import SESSION_COOKIE_NAME
 from app.api.v1 import billing
+from app.core.security import create_access_token
 from app.main import app
 from app.models.base import Subscription
 from app.models.database import SessionLocal
@@ -78,10 +80,53 @@ def test_create_billing_portal(monkeypatch):
     monkeypatch.setattr(billing, "create_stripe_billing_portal_session", fake_portal_session)
 
     with TestClient(app) as client:
-        response = client.post("/api/v1/billing/portal", json={"email": email})
+        client.cookies.set(SESSION_COOKIE_NAME, create_access_token({"sub": email}))
+        response = client.post("/api/v1/billing/portal")
 
     assert response.status_code == 200
     assert response.json() == {"portal_url": "https://billing.stripe.com/session/test"}
+
+
+def test_billing_portal_requires_authentication():
+    with TestClient(app) as client:
+        response = client.post("/api/v1/billing/portal")
+
+    assert response.status_code == 401
+
+
+def test_billing_portal_ignores_body_email_uses_session_only(monkeypatch):
+    """Regression test for the billing-portal IDOR: a caller can never fetch
+    another customer's portal by passing their email in the body -- only the
+    email inside their own signed session cookie is ever used."""
+    victim_email = f"victim-{uuid4()}@example.com"
+    attacker_email = f"attacker-{uuid4()}@example.com"
+    victim_customer_id = f"cus_{uuid4()}"
+    db = SessionLocal()
+    try:
+        db.add(
+            Subscription(
+                id=str(uuid4()),
+                email=victim_email,
+                plan="pro",
+                status="active",
+                stripe_customer_id=victim_customer_id,
+                stripe_subscription_id=f"sub_{uuid4()}",
+            )
+        )
+        db.commit()
+    finally:
+        db.close()
+
+    def fail_if_called(stripe_customer_id: str) -> dict:
+        raise AssertionError("Stripe should not be called: attacker has no subscription")
+
+    monkeypatch.setattr(billing, "create_stripe_billing_portal_session", fail_if_called)
+
+    with TestClient(app) as client:
+        client.cookies.set(SESSION_COOKIE_NAME, create_access_token({"sub": attacker_email}))
+        response = client.post("/api/v1/billing/portal", json={"email": victim_email})
+
+    assert response.status_code == 404
 
 
 def test_stripe_webhook_creates_subscription(monkeypatch):

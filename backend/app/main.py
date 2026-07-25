@@ -35,7 +35,11 @@ rate_limiter = InMemoryRateLimiter(
     max_requests=settings.RATE_LIMIT_REQUESTS,
     period_seconds=settings.RATE_LIMIT_PERIOD,
 )
-RATE_LIMITED_PREFIXES = ("/api/v1/ingestion",)
+RATE_LIMITED_PREFIXES = ("/api/v1/ingestion", "/api/v1/trends")
+# Billing writes are rate limited individually, not by prefix, so that
+# /api/v1/billing/webhook (called by Stripe's own servers, potentially in
+# bursts after any downtime) is never throttled.
+RATE_LIMITED_PATHS = {"/api/v1/billing/checkout", "/api/v1/billing/portal"}
 
 auth_code_rate_limiter = InMemoryRateLimiter(
     max_requests=settings.AUTH_CODE_RATE_LIMIT_REQUESTS,
@@ -84,7 +88,7 @@ async def rate_limit_middleware(request, call_next):
 
     if request.url.path == AUTH_CODE_RATE_LIMITED_PATH:
         limiter, limit = auth_code_rate_limiter, settings.AUTH_CODE_RATE_LIMIT_REQUESTS
-    elif request.url.path.startswith(RATE_LIMITED_PREFIXES):
+    elif request.url.path in RATE_LIMITED_PATHS or request.url.path.startswith(RATE_LIMITED_PREFIXES):
         limiter, limit = rate_limiter, settings.RATE_LIMIT_REQUESTS
     else:
         return await call_next(request)
@@ -113,6 +117,19 @@ async def rate_limit_middleware(request, call_next):
     response = await call_next(request)
     response.headers["X-RateLimit-Limit"] = str(limit)
     response.headers["X-RateLimit-Remaining"] = str(decision.remaining)
+    return response
+
+
+@app.middleware("http")
+async def security_headers_middleware(request, call_next):
+    """Attach baseline security headers to every response."""
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    if settings.is_production:
+        response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
     return response
 
 

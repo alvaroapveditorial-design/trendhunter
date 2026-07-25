@@ -3,11 +3,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from app.api.deps import require_ingestion_key, require_internal_key
 from app.models.database import get_db
 from app.schemas.schemas import TrendCreate, TrendDetailResponse, TrendResponse
 from app.services.trend_service import TrendService
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_internal_key)])
 
 
 @router.get("", response_model=list[TrendResponse])
@@ -55,7 +56,12 @@ def get_trend(trend_id_or_slug: str, db: Session = Depends(get_db)):
     return trend
 
 
-@router.post("", response_model=TrendResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=TrendResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_ingestion_key)],
+)
 def create_trend(payload: TrendCreate, db: Session = Depends(get_db)):
     """Create a trend manually."""
     return TrendService(db).create_trend(payload)

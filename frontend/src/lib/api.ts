@@ -3,6 +3,7 @@ import type { AgentExecution, IngestionRun, Trend, TrendDetail } from "@/types/t
 const SERVER_API_URL =
   process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const BACKEND_INTERNAL_KEY = process.env.BACKEND_INTERNAL_KEY;
 
 export const API_URL = typeof window === "undefined" ? SERVER_API_URL : PUBLIC_API_URL;
 
@@ -12,10 +13,19 @@ export type AuthSession = {
   has_active_subscription: boolean;
 };
 
+function internalHeaders(init?: RequestInit): HeadersInit {
+  const headers = new Headers(init?.headers);
+  if (BACKEND_INTERNAL_KEY) {
+    headers.set("X-Internal-Key", BACKEND_INTERNAL_KEY);
+  }
+  return headers;
+}
+
 async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     next: { revalidate: 30 },
     ...init,
+    headers: internalHeaders(init),
   });
 
   if (!response.ok) {
@@ -29,6 +39,7 @@ async function postJson<T>(path: string): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {
     method: "POST",
     cache: "no-store",
+    headers: internalHeaders(),
   });
 
   if (!response.ok) {

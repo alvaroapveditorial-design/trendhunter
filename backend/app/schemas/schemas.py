@@ -6,47 +6,6 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-# ===== USER SCHEMAS =====
-class UserBase(BaseModel):
-    """Base user schema."""
-
-    email: str
-    username: Optional[str] = None
-    full_name: Optional[str] = None
-
-
-class UserCreate(UserBase):
-    """User creation schema."""
-
-    password: str
-
-
-class UserLogin(BaseModel):
-    """User login schema."""
-
-    email: str
-    password: str
-
-
-class UserResponse(UserBase):
-    """User response schema."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-    id: str
-    is_verified: bool
-    subscription_plan: str
-    created_at: datetime
-
-
-class TokenResponse(BaseModel):
-    """Token response schema."""
-
-    access_token: str
-    refresh_token: str
-    token_type: str = "bearer"
-
-
 # ===== BETA SIGNUP SCHEMAS =====
 class BetaSignupCreate(BaseModel):
     """Public landing beta signup payload."""
@@ -113,19 +72,6 @@ class CheckoutSessionResponse(BaseModel):
 
     checkout_url: str
     session_id: str
-
-
-class BillingPortalCreate(BaseModel):
-    """Request body for Stripe Customer Portal creation."""
-
-    email: str = Field(min_length=5, max_length=254, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
-
-    @field_validator("email", mode="before")
-    @classmethod
-    def normalize_email(cls, value: object) -> object:
-        if isinstance(value, str):
-            return value.strip().lower()
-        return value
 
 
 class BillingPortalResponse(BaseModel):

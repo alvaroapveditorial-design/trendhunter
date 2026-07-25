@@ -2,13 +2,16 @@
 
 import { useState } from "react";
 
-export function BillingPortalButton({ email }: { email: string }) {
+import { track } from "@/lib/analytics";
+
+export function BillingPortalButton() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   async function openPortal() {
     setIsLoading(true);
     setError("");
+    track("Billing Portal Opened");
     try {
       const response = await fetch("/api/backend/api/v1/billing/portal", {
         method: "POST",
@@ -16,7 +19,6 @@ export function BillingPortalButton({ email }: { email: string }) {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ email }),
       });
       const body = await response.json().catch(() => null);
       if (!response.ok) {
