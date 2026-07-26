@@ -14,15 +14,36 @@ router = APIRouter(dependencies=[Depends(require_internal_key)])
 @router.get("/spotlight", response_model=TrendSpotlightResponse)
 def get_trend_spotlight(db: Session = Depends(get_db)):
     """Decision-first bundle for the dashboard home view: the single best
-    opportunity plus four top-5 lists, in one call."""
+    opportunity plus four top-5 lists, in one call.
+
+    Each list excludes trends already surfaced by an earlier one, so the four
+    "angles" are guaranteed to actually differ instead of converging on the
+    same handful of already-famous repos.
+    """
     service = TrendService(db)
+    seen: set[str] = set()
+
     best = service.best_opportunity()
+    if best:
+        seen.add(best.id)
+
+    top_opportunities = service.top_opportunities(limit=5, exclude_ids=seen)
+    seen.update(trend.id for trend in top_opportunities)
+
+    emerging_markets = service.emerging_markets(limit=5, exclude_ids=seen)
+    seen.update(trend.id for trend in emerging_markets)
+
+    underserved_niches = service.underserved_niches(limit=5, exclude_ids=seen)
+    seen.update(trend.id for trend in underserved_niches)
+
+    accelerating = service.accelerating(limit=5, exclude_ids=seen)
+
     return TrendSpotlightResponse(
         best_opportunity=best,
-        top_opportunities=service.top_opportunities(limit=5, exclude_id=best.id if best else None),
-        emerging_markets=service.emerging_markets(limit=5),
-        underserved_niches=service.underserved_niches(limit=5),
-        accelerating=service.accelerating(limit=5),
+        top_opportunities=top_opportunities,
+        emerging_markets=emerging_markets,
+        underserved_niches=underserved_niches,
+        accelerating=accelerating,
     )
 
 

@@ -123,23 +123,24 @@ class TrendService:
         with_brief = base_query.filter(Trend.opportunity_brief.is_not(None)).first()
         return with_brief or base_query.first()
 
-    def top_opportunities(self, limit: int = 5, exclude_id: str | None = None) -> list[Trend]:
+    def top_opportunities(self, limit: int = 5, exclude_ids: set[str] | None = None) -> list[Trend]:
         """Highest opportunity_score trends, for the "what should I build" list."""
         query = self.db.query(Trend).options(selectinload(Trend.sources)).filter(Trend.is_active.is_(True))
-        if exclude_id:
-            query = query.filter(Trend.id != exclude_id)
+        if exclude_ids:
+            query = query.filter(Trend.id.notin_(exclude_ids))
         return query.order_by(Trend.opportunity_score.desc()).limit(limit).all()
 
-    def emerging_markets(self, limit: int = 5) -> list[Trend]:
+    def emerging_markets(self, limit: int = 5, exclude_ids: set[str] | None = None) -> list[Trend]:
         """Top trends grouped by category, one representative per category --
         a proxy for "which markets" rather than "which single trend"."""
-        ranked = (
+        query = (
             self.db.query(Trend)
             .options(selectinload(Trend.sources))
             .filter(Trend.is_active.is_(True))
-            .order_by(Trend.trend_score.desc())
-            .all()
         )
+        if exclude_ids:
+            query = query.filter(Trend.id.notin_(exclude_ids))
+        ranked = query.order_by(Trend.trend_score.desc()).all()
         seen_categories: set[str] = set()
         picks: list[Trend] = []
         for trend in ranked:
@@ -151,24 +152,27 @@ class TrendService:
                 break
         return picks
 
-    def underserved_niches(self, limit: int = 5) -> list[Trend]:
-        """Decent opportunity, low competition: real demand without a crowded field yet."""
-        return (
+    def underserved_niches(self, limit: int = 5, exclude_ids: set[str] | None = None) -> list[Trend]:
+        """Decent opportunity, low competition: real demand without a crowded field yet.
+
+        Ranked by the gap between opportunity and saturation, not raw
+        opportunity_score, so this reads as a genuinely different cut of the
+        data instead of converging on the same names as top_opportunities.
+        """
+        query = (
             self.db.query(Trend)
             .options(selectinload(Trend.sources))
             .filter(Trend.is_active.is_(True), Trend.saturation_score < 45)
-            .order_by(Trend.opportunity_score.desc())
-            .limit(limit)
-            .all()
         )
+        if exclude_ids:
+            query = query.filter(Trend.id.notin_(exclude_ids))
+        candidates = query.all()
+        candidates.sort(key=lambda trend: trend.opportunity_score - trend.saturation_score, reverse=True)
+        return candidates[:limit]
 
-    def accelerating(self, limit: int = 5) -> list[Trend]:
+    def accelerating(self, limit: int = 5, exclude_ids: set[str] | None = None) -> list[Trend]:
         """Fastest-moving trends right now, regardless of overall score yet."""
-        return (
-            self.db.query(Trend)
-            .options(selectinload(Trend.sources))
-            .filter(Trend.is_active.is_(True))
-            .order_by(Trend.momentum.desc())
-            .limit(limit)
-            .all()
-        )
+        query = self.db.query(Trend).options(selectinload(Trend.sources)).filter(Trend.is_active.is_(True))
+        if exclude_ids:
+            query = query.filter(Trend.id.notin_(exclude_ids))
+        return query.order_by(Trend.momentum.desc()).limit(limit).all()

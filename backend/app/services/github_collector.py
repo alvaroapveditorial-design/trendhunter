@@ -8,6 +8,31 @@ import httpx
 from app.core.config import get_settings
 from app.schemas.schemas import SignalIngest
 
+# GitHub's `topic:ai` search also surfaces interview prep guides, awesome-lists,
+# and course material that happen to be tagged "ai" -- real signal for a course
+# catalog, not a SaaS opportunity. Skip anything that reads as reference content
+# rather than a tool/product, so it never becomes a trend in the first place.
+NON_PRODUCT_MARKERS = {
+    "interview",
+    "interview-questions",
+    "awesome",
+    "awesome-list",
+    "cheatsheet",
+    "cheat-sheet",
+    "roadmap",
+    "handbook",
+    "tutorial",
+    "course",
+    "coursework",
+    "study-notes",
+    "learning-resources",
+    "ebook",
+    "guide",
+    "questions",
+    "reading-list",
+    "curriculum",
+}
+
 
 class GitHubCollector:
     """Collect public GitHub repositories and map them to trend signals."""
@@ -39,7 +64,19 @@ class GitHubCollector:
             response.raise_for_status()
             payload = response.json()
 
-        return [self._repo_to_signal(repo) for repo in payload.get("items", [])[:max_items]]
+        signals = []
+        for repo in payload.get("items", [])[:max_items]:
+            if self._looks_like_reference_content(repo):
+                continue
+            signals.append(self._repo_to_signal(repo))
+        return signals
+
+    def _looks_like_reference_content(self, repo: dict[str, Any]) -> bool:
+        name = repo.get("full_name") or repo.get("name") or ""
+        description = repo.get("description") or ""
+        topics = [str(topic) for topic in repo.get("topics") or [] if topic]
+        haystack = f"{name} {description} {' '.join(topics)}".lower()
+        return any(marker in haystack for marker in NON_PRODUCT_MARKERS)
 
     def _repo_to_signal(self, repo: dict[str, Any]) -> SignalIngest:
         name = repo.get("full_name") or repo.get("name") or "unknown/repository"

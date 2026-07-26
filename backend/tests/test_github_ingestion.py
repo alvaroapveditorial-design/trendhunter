@@ -179,3 +179,51 @@ def test_github_repo_maps_to_signal():
     assert signal.shares == 88
     assert signal.category == "ai_saas"
     assert "developer tools" in signal.keywords
+
+
+def test_reference_content_is_filtered_out(monkeypatch):
+    """Regression test: interview guides / awesome-lists / course material
+    tagged "ai" must never become a trend, even though they match the
+    topic:ai search -- they aren't SaaS opportunities."""
+
+    def fake_collect(self, query=None, limit=10):
+        response_items = [
+            {
+                "id": 1,
+                "full_name": "Snailclimb/JavaGuide",
+                "html_url": "https://github.com/Snailclimb/JavaGuide",
+                "description": "Java interview guide covering fundamentals, databases, and AI application development.",
+                "owner": {"login": "Snailclimb"},
+                "topics": ["java", "interview", "guide"],
+                "stargazers_count": 156000,
+                "open_issues_count": 59,
+                "forks_count": 900,
+            },
+            {
+                "id": 2,
+                "full_name": "acme/agent-runtime",
+                "html_url": "https://github.com/acme/agent-runtime",
+                "description": "Production runtime for deploying AI agents.",
+                "owner": {"login": "acme"},
+                "topics": ["ai", "agents"],
+                "stargazers_count": 800,
+                "open_issues_count": 12,
+                "forks_count": 40,
+            },
+        ]
+        collector = GitHubCollector(base_url="https://example.test")
+        return [
+            collector._repo_to_signal(repo)
+            for repo in response_items
+            if not collector._looks_like_reference_content(repo)
+        ]
+
+    monkeypatch.setattr(GitHubCollector, "collect", fake_collect)
+
+    with TestClient(app) as client:
+        response = client.post("/api/v1/ingestion/github?limit=2")
+
+    assert response.status_code == 201
+    titles = [trend["title"] for trend in response.json()["trends"]]
+    assert not any("guide" in title.lower() for title in titles)
+    assert response.json()["fetched_signals"] == 1

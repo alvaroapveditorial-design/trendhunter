@@ -55,7 +55,7 @@ RSS_DEFAULT_FEED=techcrunch_startups
 RSS_FEED_URLS=techcrunch_startups=https://techcrunch.com/category/startups/feed/,producthunt=https://www.producthunt.com/feed,hn_frontpage=https://hnrss.org/frontpage
 GITHUB_API_URL=https://api.github.com
 GITHUB_DEFAULT_LIMIT=10
-GITHUB_SEARCH_QUERY=topic:ai stars:>50
+GITHUB_SEARCH_QUERY=topic:ai stars:50..3000
 GITHUB_TOKEN=<optional-github-personal-access-token>
 RATE_LIMIT_ENABLED=true
 RATE_LIMIT_REQUESTS=100

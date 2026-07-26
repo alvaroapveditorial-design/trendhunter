@@ -111,11 +111,14 @@ def test_trend_spotlight_returns_decision_bundle():
     assert payload["best_opportunity"] is not None
     assert payload["best_opportunity"]["opportunity_brief"] is not None
     assert len(payload["top_opportunities"]) >= 1
-    assert len(payload["emerging_markets"]) >= 1
-    assert len(payload["accelerating"]) >= 1
-    # the hero trend shouldn't also be duplicated in the top_opportunities list
-    best_id = payload["best_opportunity"]["id"]
-    assert best_id not in {trend["id"] for trend in payload["top_opportunities"]}
+
+    # every trend surfaced by the spotlight bundle appears exactly once across
+    # the hero + all four lists -- the four "angles" must not just repeat the
+    # same handful of trends in a different order.
+    seen_ids: list[str] = [payload["best_opportunity"]["id"]]
+    for key in ("top_opportunities", "emerging_markets", "underserved_niches", "accelerating"):
+        seen_ids.extend(trend["id"] for trend in payload[key])
+    assert len(seen_ids) == len(set(seen_ids))
 
 
 def test_trend_reads_require_internal_key_when_configured(monkeypatch):

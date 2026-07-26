@@ -65,7 +65,11 @@ class Settings(BaseSettings):
     GITHUB_TOKEN: str = ""
     GITHUB_API_URL: str = "https://api.github.com"
     GITHUB_DEFAULT_LIMIT: int = 10
-    GITHUB_SEARCH_QUERY: str = "topic:ai stars:>50"
+    # Upper bound excludes already-mega-famous projects (10k+ stars): the whole
+    # premise of the product is catching things before they're obvious, and a
+    # project with tens of thousands of stars is the opposite of a hidden
+    # opportunity -- it's already mainstream.
+    GITHUB_SEARCH_QUERY: str = "topic:ai stars:50..3000"
     NEWSAPI_KEY: str = ""
     HACKERNEWS_API_URL: str = "https://hacker-news.firebaseio.com/v0"
     HACKERNEWS_DEFAULT_LIMIT: int = 20
