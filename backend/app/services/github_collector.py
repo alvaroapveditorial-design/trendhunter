@@ -56,7 +56,14 @@ class GitHubCollector:
                 f"{self.base_url}/search/repositories",
                 params={
                     "q": search_query,
-                    "sort": "stars",
+                    # Sorting by stars within a bounded range (see
+                    # GITHUB_SEARCH_QUERY) means every result clusters right at
+                    # the top of that range -- little real variety in star
+                    # counts, so scores cluster too. Sorting by most recently
+                    # pushed gives an actual spread across the whole band and
+                    # better matches "what's active right now" than "what's
+                    # already closest to the ceiling we just capped".
+                    "sort": "updated",
                     "order": "desc",
                     "per_page": max_items,
                 },
