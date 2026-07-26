@@ -13,6 +13,18 @@ def test_detects_mixed_chinese_and_english():
     assert looks_non_english(text) is True
 
 
+def test_detects_english_description_with_translated_clause_appended():
+    """Regression test: a description that's mostly English but has a full
+    translated clause tacked on after a separator must still be caught, even
+    though the Chinese portion alone is a minority of the total characters."""
+    text = (
+        "Real-time token, cost, and AI limits widget with multi-device sync for "
+        "Claude Code, Codex, OpenCode, Hermes, OpenClaw, Cursor, Antigravity and "
+        "more. | 为 AI Tools 打造的即时Token、成本与限额监控桌面组件，支持多设备同步"
+    )
+    assert looks_non_english(text) is True
+
+
 def test_allows_plain_english():
     text = "A Model Context Protocol server for searching and analyzing arXiv papers"
     assert looks_non_english(text) is False

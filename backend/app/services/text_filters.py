@@ -21,12 +21,14 @@ _NON_LATIN_SCRIPT_PATTERN = re.compile(
 )
 
 
-def looks_non_english(text: str, threshold: float = 0.15) -> bool:
+def looks_non_english(text: str, threshold: float = 0.10) -> bool:
     """True if a meaningful share of the text's characters are non-Latin script.
 
-    A low threshold (15% of non-whitespace characters) is enough to catch
-    genuinely non-English content while tolerating the occasional foreign
-    word or emoji inside an otherwise-English title/description.
+    A low threshold (10% of non-whitespace characters) is enough to catch
+    genuinely non-English content -- including the common case of an English
+    description with a full translated clause appended after a separator
+    ("... | 为 AI Tools 打造的...") -- while tolerating the occasional foreign
+    proper noun inside an otherwise-English title/description.
     """
     if not text:
         return False
