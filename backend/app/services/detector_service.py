@@ -1,6 +1,7 @@
 """Heuristic trend detector for the MVP."""
 
 import logging
+import math
 import re
 from collections import Counter
 from datetime import datetime, timedelta, timezone
@@ -16,7 +17,7 @@ logger = logging.getLogger(__name__)
 # --- Scoring weights (all values sum to 100 max contribution) ---
 _SCORE_BASE = 25          # floor score every detected trend starts with
 _VELOCITY_CAP = 35        # max points from raw engagement velocity
-_VELOCITY_DIVISOR = 8     # engagement units per velocity point
+_VELOCITY_LOG_MULTIPLIER = 10  # log10(engagement) points per order of magnitude
 _BREADTH_CAP = 20         # max points from source count diversity
 _BREADTH_MULTIPLIER = 5   # source count multiplier for breadth
 _RECURRENCE_CAP = 20      # max points from mention recurrence
@@ -424,7 +425,13 @@ class DetectorService:
         mentions = max(trend.mentions_count or 0, 0) + 1
         total_engagement = max(trend.engagement_count or 0, 0) + engagement
 
-        velocity = min(_VELOCITY_CAP, engagement / _VELOCITY_DIVISOR)
+        # Engagement (stars, upvotes, forks...) follows a power-law distribution,
+        # not a linear one: the gap between 50 and 500 is far more meaningful
+        # than between 2500 and 3000. A linear divisor saturated the cap almost
+        # immediately for any repo past a few hundred stars, making unrelated
+        # trends land on the exact same score -- log-scaling spreads the whole
+        # practical range out instead of flattening most of it to the ceiling.
+        velocity = min(_VELOCITY_CAP, math.log10(engagement + 1) * _VELOCITY_LOG_MULTIPLIER)
         breadth = min(_BREADTH_CAP, source_count * _BREADTH_MULTIPLIER)
         recurrence = min(_RECURRENCE_CAP, mentions * _RECURRENCE_MULTIPLIER)
         source_bonus = _SOURCE_SCORE_BONUSES.get(signal.source_type, 0)

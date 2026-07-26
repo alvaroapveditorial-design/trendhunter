@@ -181,6 +181,52 @@ def test_github_repo_maps_to_signal():
     assert "developer tools" in signal.keywords
 
 
+def test_distinct_repos_get_distinct_scores(monkeypatch):
+    """Regression test: within the stars:50..3000 range, different repos must
+    not collapse onto the exact same trend_score. A linear velocity divisor
+    used to saturate its cap for any repo past a few hundred stars, making
+    unrelated trends look identically scored -- the opposite of what a
+    scoring system is supposed to signal."""
+
+    def fake_collect(self, query=None, limit=10):
+        return [
+            SignalIngest(
+                title="acme/small-tool",
+                content="A small emerging developer tool.",
+                source_type="github",
+                source_url="https://github.com/acme/small-tool",
+                source_id="201",
+                upvotes=60,
+                comments=2,
+                shares=3,
+                keywords=["developer tools"],
+                category="developer_tools",
+            ),
+            SignalIngest(
+                title="acme/big-tool",
+                content="A much more established developer tool.",
+                source_type="github",
+                source_url="https://github.com/acme/big-tool",
+                source_id="202",
+                upvotes=2800,
+                comments=90,
+                shares=400,
+                keywords=["developer tools"],
+                category="developer_tools",
+            ),
+        ]
+
+    monkeypatch.setattr(GitHubCollector, "collect", fake_collect)
+
+    with TestClient(app) as client:
+        response = client.post("/api/v1/ingestion/github?limit=2")
+
+    assert response.status_code == 201
+    trends = {trend["title"]: trend for trend in response.json()["trends"]}
+    assert trends["Small Tool"]["trend_score"] != trends["Big Tool"]["trend_score"]
+    assert trends["Big Tool"]["trend_score"] > trends["Small Tool"]["trend_score"]
+
+
 def test_reference_content_is_filtered_out(monkeypatch):
     """Regression test: interview guides / awesome-lists / course material
     tagged "ai" must never become a trend, even though they match the
