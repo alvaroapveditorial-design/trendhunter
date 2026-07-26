@@ -335,13 +335,13 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
       <article class="feature reveal">
         <div class="feature__ix">/05</div>
         <div class="feature__main">
-          <h3>Operating dashboard to prioritize</h3>
-          <p>Trends, sources, scores, and history live in one view to review signals, compare opportunities, and decide what to dig into next.</p>
-          <div class="feature__tags"><span class="tag">MVP dashboard</span><span class="tag">Run history</span><span class="tag">Exportable soon</span></div>
+          <h3>Decision-first dashboard</h3>
+          <p>Every session opens with the single best opportunity this week, fully briefed — ICP, competition, MVP to build, monetization, risks — plus four ranked shortlists underneath. No table to interpret first.</p>
+          <div class="feature__tags"><span class="tag">Best opportunity first</span><span class="tag">Ranked shortlists</span><span class="tag">Full trend history</span></div>
         </div>
         <div class="feature__viz lockviz">
           <div class="lockviz__ic"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="15.5" r="1.4" fill="currentColor"/></svg></div>
-          <p>Centralized view<br>Traceable scores and sources<br>Ready for auth and teams</p>
+          <p>One best pick, every session<br>ICP, MVP, and risks included<br>Ranked opportunities, not raw data</p>
         </div>
       </article>
     </div>

@@ -30,10 +30,41 @@ export type Trend = {
   last_updated_at: string;
 };
 
+export type OpportunityScores = {
+  market: number;
+  competition: number;
+  urgency: number;
+  viability: number;
+  potential: number;
+};
+
+export type OpportunityBrief = {
+  executive_summary?: string | null;
+  why_now: string;
+  icp: string;
+  problem: string;
+  competition_level: string;
+  mvp_recommendation: string;
+  monetization_models: string[];
+  risks: string[];
+  market_velocity: string;
+  market_size_signal: string;
+  scores: OpportunityScores;
+};
+
 export type TrendDetail = Trend & {
   ai_insights?: string | null;
   saas_opportunities: string[];
   sources: TrendSource[];
+  opportunity_brief?: OpportunityBrief | null;
+};
+
+export type TrendSpotlight = {
+  best_opportunity: TrendDetail | null;
+  top_opportunities: Trend[];
+  emerging_markets: Trend[];
+  underserved_niches: Trend[];
+  accelerating: Trend[];
 };
 
 export type IngestionRun = {

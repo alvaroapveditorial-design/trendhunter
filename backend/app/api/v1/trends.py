@@ -5,10 +5,25 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import require_ingestion_key, require_internal_key
 from app.models.database import get_db
-from app.schemas.schemas import TrendCreate, TrendDetailResponse, TrendResponse
+from app.schemas.schemas import TrendCreate, TrendDetailResponse, TrendResponse, TrendSpotlightResponse
 from app.services.trend_service import TrendService
 
 router = APIRouter(dependencies=[Depends(require_internal_key)])
+
+
+@router.get("/spotlight", response_model=TrendSpotlightResponse)
+def get_trend_spotlight(db: Session = Depends(get_db)):
+    """Decision-first bundle for the dashboard home view: the single best
+    opportunity plus four top-5 lists, in one call."""
+    service = TrendService(db)
+    best = service.best_opportunity()
+    return TrendSpotlightResponse(
+        best_opportunity=best,
+        top_opportunities=service.top_opportunities(limit=5, exclude_id=best.id if best else None),
+        emerging_markets=service.emerging_markets(limit=5),
+        underserved_niches=service.underserved_niches(limit=5),
+        accelerating=service.accelerating(limit=5),
+    )
 
 
 @router.get("", response_model=list[TrendResponse])

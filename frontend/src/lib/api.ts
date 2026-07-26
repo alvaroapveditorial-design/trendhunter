@@ -1,4 +1,4 @@
-import type { AgentExecution, IngestionRun, Trend, TrendDetail } from "@/types/trend";
+import type { AgentExecution, IngestionRun, Trend, TrendDetail, TrendSpotlight } from "@/types/trend";
 
 const SERVER_API_URL =
   process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -75,6 +75,10 @@ export function getSources(): Promise<string[]> {
 
 export function getTrend(slug: string): Promise<TrendDetail> {
   return getJson<TrendDetail>(`/api/v1/trends/${slug}`);
+}
+
+export function getTrendSpotlight(): Promise<TrendSpotlight> {
+  return getJson<TrendSpotlight>("/api/v1/trends/spotlight");
 }
 
 export function getIngestionRuns(): Promise<AgentExecution[]> {

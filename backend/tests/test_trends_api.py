@@ -83,6 +83,41 @@ def test_create_trend_requires_ingestion_key_when_configured(monkeypatch):
     assert authed.status_code == 201
 
 
+def test_ingestion_produces_opportunity_brief():
+    with TestClient(app) as client:
+        demo = client.post("/api/v1/ingestion/demo")
+        assert demo.status_code == 201
+        slug = demo.json()["trends"][0]["slug"]
+        response = client.get(f"/api/v1/trends/{slug}")
+
+    assert response.status_code == 200
+    brief = response.json()["opportunity_brief"]
+    assert brief is not None
+    assert brief["icp"]
+    assert brief["problem"]
+    assert brief["mvp_recommendation"]
+    assert brief["monetization_models"]
+    assert brief["risks"]
+    assert set(brief["scores"]) == {"market", "competition", "urgency", "viability", "potential"}
+
+
+def test_trend_spotlight_returns_decision_bundle():
+    with TestClient(app) as client:
+        client.post("/api/v1/ingestion/demo")
+        response = client.get("/api/v1/trends/spotlight")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["best_opportunity"] is not None
+    assert payload["best_opportunity"]["opportunity_brief"] is not None
+    assert len(payload["top_opportunities"]) >= 1
+    assert len(payload["emerging_markets"]) >= 1
+    assert len(payload["accelerating"]) >= 1
+    # the hero trend shouldn't also be duplicated in the top_opportunities list
+    best_id = payload["best_opportunity"]["id"]
+    assert best_id not in {trend["id"] for trend in payload["top_opportunities"]}
+
+
 def test_trend_reads_require_internal_key_when_configured(monkeypatch):
     monkeypatch.setenv("BACKEND_INTERNAL_KEY", "test-internal-key")
     get_settings.cache_clear()

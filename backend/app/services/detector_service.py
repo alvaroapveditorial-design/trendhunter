@@ -129,6 +129,66 @@ STOP_WORDS = {
     "your",
 }
 
+CATEGORY_PROFILES = {
+    "ai_saas": {
+        "icp": "Product and engineering teams who want AI in their product without building the infrastructure themselves",
+        "problem": "Adopting AI capabilities without spending months building the infrastructure in-house",
+        "monetization_models": [
+            "SaaS monthly subscription",
+            "Usage-based API pricing",
+            "Add-on/plugin for existing tools",
+        ],
+        "viability_bonus": 25,
+    },
+    "developer_tools": {
+        "icp": "Developers and platform teams",
+        "problem": "No standard, reliable tool exists yet for this workflow",
+        "monetization_models": [
+            "Open-core with paid support",
+            "Per-seat SaaS",
+            "Paid API/SDK usage",
+        ],
+        "viability_bonus": 25,
+    },
+    "privacy": {
+        "icp": "Product and legal teams at companies with compliance requirements (GDPR)",
+        "problem": "Meeting privacy regulation without sacrificing product functionality or analytics",
+        "monetization_models": ["SaaS subscription", "Audit/consulting bundled with a tool"],
+        "viability_bonus": 15,
+    },
+    "product": {
+        "icp": "Product managers and research teams",
+        "problem": "Understanding the user faster with less manual research effort",
+        "monetization_models": ["SaaS subscription", "User-research add-on"],
+        "viability_bonus": 15,
+    },
+    "marketing": {
+        "icp": "Marketing and growth teams at startups",
+        "problem": "Getting more output with less manual effort in their marketing stack",
+        "monetization_models": ["SaaS subscription", "Managed service bundled with a tool"],
+        "viability_bonus": 15,
+    },
+    "startups": {
+        "icp": "Founders and early-stage teams",
+        "problem": "Validating or shipping faster with limited resources",
+        "monetization_models": ["SaaS subscription", "Community + tool (freemium)"],
+        "viability_bonus": 10,
+    },
+    "business": {
+        "icp": "Operations and business teams at SMBs",
+        "problem": "Manual processes eating up the team's time",
+        "monetization_models": ["SaaS subscription", "Service bundled with software"],
+        "viability_bonus": 10,
+    },
+}
+
+_DEFAULT_CATEGORY_PROFILE = {
+    "icp": "Early adopters of this space -- no defined profile yet",
+    "problem": "Emerging need detected from public signal, not validated yet",
+    "monetization_models": ["To be validated -- not enough signal to recommend a model yet"],
+    "viability_bonus": 0,
+}
+
 CATEGORY_KEYWORDS = {
     "ai_saas": {"ai", "agent", "agents", "automation", "copilot", "llm", "workflow"},
     "privacy": {"cookie", "gdpr", "privacy", "tracking"},
@@ -138,6 +198,19 @@ CATEGORY_KEYWORDS = {
     "startups": {"battlefield", "founder", "funding", "startup", "startups", "venture"},
     "business": {"business", "company", "market", "revenue", "sales"},
 }
+
+
+_ACRONYMS = {"ai", "api", "sdk", "gdpr", "llm", "saas", "seo", "ui", "ux", "qa", "crm", "erp", "mvp", "sql", "aws"}
+
+
+def _titlecase(value: str) -> str:
+    """Title-case a phrase while keeping known tech acronyms fully uppercase.
+
+    Python's str.title() turns "ai agents" into "Ai Agents" -- wrong for a
+    product whose whole premise is AI trends. Fixes the common ones without
+    a full NLP dependency.
+    """
+    return " ".join(word.upper() if word.lower() in _ACRONYMS else word for word in value.title().split())
 
 
 def slugify(value: str) -> str:
@@ -372,6 +445,7 @@ class DetectorService:
         trend.content_summary = signal.content or trend.content_summary or signal.title
         trend.ai_insights = self._insight(trend)
         trend.saas_opportunities = self._opportunities(trend)
+        trend.opportunity_brief = self._build_opportunity_brief(trend)
         trend.last_updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
 
     def _keywords(self, signal: SignalIngest) -> list[str]:
@@ -427,7 +501,7 @@ class DetectorService:
             return self._rss_trend_title(signal, keywords)
         explicit = [keyword.strip().lower() for keyword in signal.keywords if self._is_title_keyword(keyword)]
         if explicit:
-            return explicit[0].title()
+            return _titlecase(explicit[0])
         return self._title_from_signal(signal.title, keywords)
 
     def _is_title_keyword(self, keyword: str) -> bool:
@@ -440,12 +514,12 @@ class DetectorService:
         words = re.findall(r"[a-zA-Z][a-zA-Z0-9-]{1,}", title.lower())
         meaningful = [word for word in words if word not in STOP_WORDS]
         if meaningful:
-            return " ".join(meaningful[:max_words]).title()
+            return _titlecase(" ".join(meaningful[:max_words]))
         title_keywords = [keyword for keyword in keywords if keyword not in GENERIC_TITLE_KEYWORDS]
         if title_keywords:
-            return " ".join(title_keywords[:3]).title()
+            return _titlecase(" ".join(title_keywords[:3]))
         if keywords:
-            return " ".join(keywords[:3]).title()
+            return _titlecase(" ".join(keywords[:3]))
         return title
 
     def _rss_trend_title(self, signal: SignalIngest, keywords: list[str]) -> str:
@@ -469,3 +543,78 @@ class DetectorService:
             f"Create a lightweight workflow tool around {base}",
             f"Package weekly opportunity reports for teams tracking {base}",
         ]
+
+    def _build_opportunity_brief(self, trend: Trend) -> dict:
+        """Turn a scored trend into a decision-oriented brief.
+
+        Deliberately heuristic, not LLM-generated: every field is derived
+        from data already computed for this trend (scores, source count,
+        category), so there is no per-trend inference cost and nothing here
+        claims to be an AI-verified fact -- it's the same explainable
+        scoring approach as trend_score/opportunity_score, just structured
+        as a brief instead of four numbers.
+        """
+        profile = CATEGORY_PROFILES.get(trend.category, _DEFAULT_CATEGORY_PROFILE)
+
+        market = round(min(100, trend.source_count * _BREADTH_MULTIPLIER * 4 + min(40, trend.mentions_count * 2)), 1)
+        competition = round(trend.saturation_score, 1)
+        urgency = round(min(100, trend.momentum * 2.5), 1)
+        viability = round(min(100, 40 + (20 if trend.source_count >= 2 else 0) + profile["viability_bonus"]), 1)
+        potential = round(trend.trend_score, 1)
+
+        if competition < 35:
+            competition_label = "Low -- open gap"
+        elif competition < 65:
+            competition_label = "Moderate"
+        else:
+            competition_label = "High -- crowded space"
+
+        if trend.momentum >= 25:
+            velocity_label = "Accelerating fast"
+        elif trend.momentum >= 10:
+            velocity_label = "Growing"
+        else:
+            velocity_label = "Stable / early signal"
+
+        if trend.mentions_count >= 5 or trend.engagement_count >= 500:
+            market_size_label = (
+                f"Visible traction -- {trend.source_count} source(s), {trend.mentions_count} mention(s)"
+            )
+        else:
+            market_size_label = "Emerging signal -- still few mentions, validate before committing resources"
+
+        risks = []
+        if competition >= 65:
+            risks.append("Already a crowded space: real differentiation needed before building")
+        if trend.source_count <= 1:
+            risks.append("Single-source signal -- validate with additional data before investing")
+        if trend.category == "emerging":
+            risks.append("Category not defined yet: real demand is still unconfirmed")
+        if not risks:
+            risks.append("No elevated risk signals detected in the current data")
+
+        mvp_recommendation = (
+            trend.saas_opportunities[0]
+            if trend.saas_opportunities
+            else f"Build a focused tool around {trend.title.lower()}"
+        )
+
+        return {
+            "executive_summary": trend.ai_insights,
+            "why_now": f"{velocity_label} -- momentum of {trend.momentum} in the latest signal.",
+            "icp": profile["icp"],
+            "problem": profile["problem"],
+            "competition_level": competition_label,
+            "mvp_recommendation": mvp_recommendation,
+            "monetization_models": profile["monetization_models"],
+            "risks": risks,
+            "market_velocity": velocity_label,
+            "market_size_signal": market_size_label,
+            "scores": {
+                "market": market,
+                "competition": competition,
+                "urgency": urgency,
+                "viability": viability,
+                "potential": potential,
+            },
+        }

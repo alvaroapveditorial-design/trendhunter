@@ -132,6 +132,7 @@ class Trend(Base):
     content_summary = Column(Text, nullable=True)
     ai_insights = Column(Text, nullable=True)
     saas_opportunities = Column(JSON, default=[])
+    opportunity_brief = Column(JSON, nullable=True)  # structured decision brief, see detector_service
 
     # Statistics
     mentions_count = Column(Integer, default=0)

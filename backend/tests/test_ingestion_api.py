@@ -160,7 +160,7 @@ def test_generic_ai_keyword_does_not_become_title():
         )
 
     assert response.status_code == 201
-    assert response.json()["trends"][0]["title"] == "Hn Ai Copilot Database Migrations"
+    assert response.json()["trends"][0]["title"] == "Hn AI Copilot Database Migrations"
 
 
 def test_ingested_trend_is_queryable():

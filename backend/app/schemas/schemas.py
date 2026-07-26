@@ -175,12 +175,49 @@ class TrendResponse(TrendBase):
     last_updated_at: datetime
 
 
+class OpportunityScores(BaseModel):
+    """Explainable breakdown behind a trend's opportunity_score."""
+
+    market: float
+    competition: float
+    urgency: float
+    viability: float
+    potential: float
+
+
+class OpportunityBrief(BaseModel):
+    """Decision-oriented brief derived heuristically from a trend's signals."""
+
+    executive_summary: Optional[str] = None
+    why_now: str
+    icp: str
+    problem: str
+    competition_level: str
+    mvp_recommendation: str
+    monetization_models: list[str]
+    risks: list[str]
+    market_velocity: str
+    market_size_signal: str
+    scores: OpportunityScores
+
+
 class TrendDetailResponse(TrendResponse):
     """Detailed trend response with sources."""
 
     ai_insights: Optional[str] = None
     saas_opportunities: list[str] = []
     sources: list[TrendSourceResponse] = []
+    opportunity_brief: Optional[OpportunityBrief] = None
+
+
+class TrendSpotlightResponse(BaseModel):
+    """Decision-first bundle for the dashboard home view."""
+
+    best_opportunity: Optional[TrendDetailResponse] = None
+    top_opportunities: list[TrendResponse] = []
+    emerging_markets: list[TrendResponse] = []
+    underserved_niches: list[TrendResponse] = []
+    accelerating: list[TrendResponse] = []
 
 
 # ===== INGESTION SCHEMAS =====

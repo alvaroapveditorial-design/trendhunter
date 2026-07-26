@@ -37,7 +37,7 @@ def test_rss_endpoint_ingests_collected_signals(monkeypatch):
     assert payload["processed_signals"] == 1
     assert payload["trends"][0]["trend_score"] >= 45
     assert payload["trends"][0]["category"] == "ai_saas"
-    assert payload["trends"][0]["title"] == "Ai Tools Founder Research Workflows"
+    assert payload["trends"][0]["title"] == "AI Tools Founder Research Workflows"
 
 
 def test_rss_endpoint_lists_configured_feeds():
@@ -215,6 +215,6 @@ def test_rss_ingestion_uses_article_title_not_feed_name(monkeypatch):
 
     assert response.status_code == 201
     trend = response.json()["trends"][0]
-    assert trend["title"] == "Startup Founders Ai Copilots Sales"
+    assert trend["title"] == "Startup Founders AI Copilots Sales"
     assert trend["slug"] == "startup-founders-ai-copilots-sales"
     assert trend["trend_score"] >= 45

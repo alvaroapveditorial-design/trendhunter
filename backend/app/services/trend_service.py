@@ -106,3 +106,69 @@ class TrendService:
             .all()
         )
         return [row[0] for row in rows]
+
+    def best_opportunity(self) -> Trend | None:
+        """The single highest-scored active trend -- the dashboard's hero card.
+
+        Prefers trends that already have a computed opportunity_brief (real
+        ingested signal) over older/seed rows that predate it, so the hero
+        card is never empty-looking even right after a fresh deploy.
+        """
+        base_query = (
+            self.db.query(Trend)
+            .options(selectinload(Trend.sources))
+            .filter(Trend.is_active.is_(True))
+            .order_by(Trend.opportunity_score.desc(), Trend.trend_score.desc())
+        )
+        with_brief = base_query.filter(Trend.opportunity_brief.is_not(None)).first()
+        return with_brief or base_query.first()
+
+    def top_opportunities(self, limit: int = 5, exclude_id: str | None = None) -> list[Trend]:
+        """Highest opportunity_score trends, for the "what should I build" list."""
+        query = self.db.query(Trend).options(selectinload(Trend.sources)).filter(Trend.is_active.is_(True))
+        if exclude_id:
+            query = query.filter(Trend.id != exclude_id)
+        return query.order_by(Trend.opportunity_score.desc()).limit(limit).all()
+
+    def emerging_markets(self, limit: int = 5) -> list[Trend]:
+        """Top trends grouped by category, one representative per category --
+        a proxy for "which markets" rather than "which single trend"."""
+        ranked = (
+            self.db.query(Trend)
+            .options(selectinload(Trend.sources))
+            .filter(Trend.is_active.is_(True))
+            .order_by(Trend.trend_score.desc())
+            .all()
+        )
+        seen_categories: set[str] = set()
+        picks: list[Trend] = []
+        for trend in ranked:
+            if trend.category in seen_categories:
+                continue
+            seen_categories.add(trend.category)
+            picks.append(trend)
+            if len(picks) >= limit:
+                break
+        return picks
+
+    def underserved_niches(self, limit: int = 5) -> list[Trend]:
+        """Decent opportunity, low competition: real demand without a crowded field yet."""
+        return (
+            self.db.query(Trend)
+            .options(selectinload(Trend.sources))
+            .filter(Trend.is_active.is_(True), Trend.saturation_score < 45)
+            .order_by(Trend.opportunity_score.desc())
+            .limit(limit)
+            .all()
+        )
+
+    def accelerating(self, limit: int = 5) -> list[Trend]:
+        """Fastest-moving trends right now, regardless of overall score yet."""
+        return (
+            self.db.query(Trend)
+            .options(selectinload(Trend.sources))
+            .filter(Trend.is_active.is_(True))
+            .order_by(Trend.momentum.desc())
+            .limit(limit)
+            .all()
+        )

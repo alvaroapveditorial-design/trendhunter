@@ -3,7 +3,16 @@ import { DashboardFilterAnalytics } from "@/components/DashboardFilterAnalytics"
 import { LogoutButton } from "@/components/LogoutButton";
 import { PageViewTracker } from "@/components/PageViewTracker";
 import { TrendDetailAnalytics } from "@/components/TrendDetailAnalytics";
-import { getCategories, getCurrentSession, getIngestionRuns, getSources, getTrend, getTrends } from "@/lib/api";
+import {
+  getCategories,
+  getCurrentSession,
+  getIngestionRuns,
+  getSources,
+  getTrend,
+  getTrends,
+  getTrendSpotlight,
+} from "@/lib/api";
+import type { Trend } from "@/types/trend";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -35,6 +44,43 @@ function sourceLabel(source?: string | null) {
   return source.replaceAll("_", " ");
 }
 
+function TopFive({
+  title,
+  trends,
+  currentParams,
+}: {
+  title: string;
+  trends: Trend[];
+  currentParams: Record<string, string | undefined>;
+}) {
+  if (trends.length === 0) return null;
+
+  return (
+    <div className="top5">
+      <h4>{title}</h4>
+      <ol>
+        {trends.map((trend) => (
+          <li key={trend.id}>
+            <a
+              href={`/dashboard?${new URLSearchParams({
+                ...(currentParams.q ? { q: currentParams.q } : {}),
+                ...(currentParams.category ? { category: currentParams.category } : {}),
+                ...(currentParams.source_type ? { source_type: currentParams.source_type } : {}),
+                ...(currentParams.min_score ? { min_score: currentParams.min_score } : {}),
+                trend: trend.slug,
+              }).toString()}#detail-panel`}
+            >
+              <span className="top5__score">{Math.round(trend.opportunity_score)}</span>
+              <span className="top5__title">{trend.title}</span>
+              <span className="top5__cat">{trend.category.replaceAll("_", " ")}</span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 export default async function DashboardPage({
   searchParams,
 }: {
@@ -59,7 +105,7 @@ export default async function DashboardPage({
 
   const params = (await searchParams) ?? {};
   const minScore = params.min_score ? Number(params.min_score) : undefined;
-  const [trends, categories, sources] = await Promise.all([
+  const [trends, categories, sources, spotlight] = await Promise.all([
     getTrends({
       q: params.q,
       category: params.category,
@@ -68,16 +114,18 @@ export default async function DashboardPage({
     }),
     getCategories(),
     getSources(),
+    getTrendSpotlight(),
   ]);
   const runs = await getIngestionRuns();
 
-  const selectedSlug =
-    params.trend && trends.some((trend) => trend.slug === params.trend)
-      ? params.trend
-      : trends[0]?.slug;
+  // Trust a ?trend= slug even if it comes from the spotlight (top opportunities,
+  // emerging markets, etc.) rather than the currently filtered list below --
+  // getTrend() resolves it directly against the backend either way.
+  const selectedSlug = params.trend || trends[0]?.slug;
   const selectedTrend = selectedSlug ? await getTrend(selectedSlug) : null;
   const topTrend = trends[0];
   const hasActiveFilters = Boolean(params.q || params.category || params.source_type || params.min_score);
+  const brief = spotlight.best_opportunity?.opportunity_brief;
 
   return (
     <main className="shell">
@@ -93,6 +141,98 @@ export default async function DashboardPage({
           <LogoutButton />
         </div>
       </header>
+
+      {spotlight.best_opportunity ? (
+        <section className="spotlight" aria-label="Best opportunity this week">
+          <div className="spotlight-hero">
+            <span className="eyebrow">Best opportunity this week</span>
+            <h2>{spotlight.best_opportunity.title}</h2>
+            {brief ? (
+              <>
+                <p className="spotlight-hero__summary">{brief.executive_summary}</p>
+
+                <div className="spotlight-scores">
+                  <div>
+                    <span>Market</span>
+                    <strong>{Math.round(brief.scores.market)}</strong>
+                  </div>
+                  <div>
+                    <span>Competition</span>
+                    <strong>{Math.round(brief.scores.competition)}</strong>
+                  </div>
+                  <div>
+                    <span>Urgency</span>
+                    <strong>{Math.round(brief.scores.urgency)}</strong>
+                  </div>
+                  <div>
+                    <span>Viability</span>
+                    <strong>{Math.round(brief.scores.viability)}</strong>
+                  </div>
+                  <div>
+                    <span>Potential</span>
+                    <strong>{Math.round(brief.scores.potential)}</strong>
+                  </div>
+                </div>
+
+                <div className="spotlight-grid">
+                  <div className="spotlight-block">
+                    <h4>Why now</h4>
+                    <p>{brief.why_now}</p>
+                  </div>
+                  <div className="spotlight-block">
+                    <h4>Who would buy it</h4>
+                    <p>{brief.icp}</p>
+                  </div>
+                  <div className="spotlight-block">
+                    <h4>Problem it solves</h4>
+                    <p>{brief.problem}</p>
+                  </div>
+                  <div className="spotlight-block">
+                    <h4>Competition</h4>
+                    <p>{brief.competition_level}</p>
+                  </div>
+                  <div className="spotlight-block">
+                    <h4>Market signal</h4>
+                    <p>{brief.market_size_signal}</p>
+                  </div>
+                  <div className="spotlight-block">
+                    <h4>MVP to build</h4>
+                    <p>{brief.mvp_recommendation}</p>
+                  </div>
+                </div>
+
+                <div className="spotlight-lists">
+                  <div>
+                    <h4>Ways to monetize</h4>
+                    <ul>
+                      {brief.monetization_models.map((model) => (
+                        <li key={model}>{model}</li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <h4>Risks</h4>
+                    <ul>
+                      {brief.risks.map((risk) => (
+                        <li key={risk}>{risk}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </>
+            ) : null}
+          </div>
+
+          <div className="spotlight-top5-grid">
+            <TopFive title="Top 5 opportunities" trends={spotlight.top_opportunities} currentParams={params} />
+            <TopFive title="Top 5 emerging markets" trends={spotlight.emerging_markets} currentParams={params} />
+            <TopFive title="Top 5 underserved niches" trends={spotlight.underserved_niches} currentParams={params} />
+            <TopFive title="Top 5 accelerating" trends={spotlight.accelerating} currentParams={params} />
+          </div>
+        </section>
+      ) : null}
+
+      <p className="eyebrow explore-eyebrow">Explore all trends</p>
 
       <section className="summary-grid" aria-label="Trend summary">
         <div className="metric">
@@ -199,7 +339,7 @@ export default async function DashboardPage({
           )}
         </div>
 
-        <aside className="detail-panel">
+        <aside className="detail-panel" id="detail-panel">
           {selectedTrend ? (
             <>
               <TrendDetailAnalytics
