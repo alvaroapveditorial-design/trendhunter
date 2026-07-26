@@ -12,6 +12,21 @@ from app.schemas.schemas import SignalIngest
 
 MAX_SIGNAL_CONTENT_LENGTH = 2000
 
+# HN's front page mixes tech/startup content with general news, science, and
+# culture -- without a relevance gate, stories with nothing to do with SaaS
+# or software (e.g. a mathematician winning a prize) end up scored as
+# "opportunities". Require at least one signal that this is actually about
+# technology, developer tooling, AI, or a business/startup, before letting a
+# story become a trend.
+RELEVANCE_TERMS = {
+    "ai", "llm", "agent", "agents", "copilot", "automation", "saas", "software",
+    "app", "platform", "tool", "product", "api", "sdk",
+    "developer", "database", "github", "open source", "framework", "library",
+    "startup", "founder", "funding", "raised", "raises", "venture", "investor",
+    "seed round", "series a", "series b", "acquisition", "acquired", "valuation",
+    "launch", "launches", "privacy", "gdpr", "compliance",
+}
+
 
 class HackerNewsCollector:
     """Collect public Hacker News stories and map them to trend signals."""
@@ -55,6 +70,8 @@ class HackerNewsCollector:
         title = item.get("title")
         if not title:
             return None
+        if not self._is_relevant(title):
+            return None
 
         published_at = None
         if item.get("time"):
@@ -89,6 +106,10 @@ class HackerNewsCollector:
         if len(cleaned) <= MAX_SIGNAL_CONTENT_LENGTH:
             return cleaned
         return cleaned[:MAX_SIGNAL_CONTENT_LENGTH].rstrip()
+
+    def _is_relevant(self, title: str) -> bool:
+        lowered = title.lower()
+        return any(term in lowered for term in RELEVANCE_TERMS)
 
     def _keywords_from_title(self, title: str) -> list[str]:
         lowered = title.lower()

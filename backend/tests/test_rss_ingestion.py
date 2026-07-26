@@ -119,6 +119,59 @@ def test_rss_collector_maps_rss_item_to_signal():
     assert "startup" in signal.keywords
 
 
+def test_rss_collector_skips_off_topic_items():
+    """Regression test: techcrunch_startups and hn_frontpage mix in general
+    news -- items with nothing to do with tech/SaaS/startups must not
+    become a trend."""
+    xml = """
+    <rss version="2.0">
+      <channel>
+        <item>
+          <title>Hannah Fry Wins Leelavati Prize</title>
+          <link>https://example.com/prize</link>
+          <description>The mathematician was recognized for her public outreach work.</description>
+          <pubDate>Sat, 06 Jun 2026 12:00:00 GMT</pubDate>
+        </item>
+      </channel>
+    </rss>
+    """
+
+    signals = RSSCollector()._parse(
+        xml,
+        feed_key="techcrunch_startups",
+        feed_url="https://example.com/feed",
+        limit=5,
+    )
+
+    assert signals == []
+
+
+def test_rss_collector_never_filters_producthunt_items():
+    """Product Hunt's feed is product launches by construction -- it should
+    never be keyword-gated, even when the description reads as plain
+    English with no obvious tech buzzwords."""
+    xml = """
+    <rss version="2.0">
+      <channel>
+        <item>
+          <title>Fox Issue Tracker</title>
+          <link>https://example.com/issue-tracker</link>
+          <description>Track, plan, and release.</description>
+        </item>
+      </channel>
+    </rss>
+    """
+
+    signals = RSSCollector()._parse(
+        xml,
+        feed_key="producthunt",
+        feed_url="https://example.com/feed",
+        limit=5,
+    )
+
+    assert len(signals) == 1
+
+
 def test_rss_collector_maps_atom_entry_to_signal():
     xml = """
     <feed xmlns="http://www.w3.org/2005/Atom">

@@ -91,6 +91,26 @@ def test_hackernews_item_maps_to_signal():
     assert "developer tools" in signal.keywords
 
 
+def test_hackernews_skips_off_topic_stories():
+    """Regression test: HN's front page mixes in general news/science/culture
+    stories with nothing to do with SaaS or software -- those must never
+    become a trend, even though they have a title and a score."""
+    collector = HackerNewsCollector(base_url="https://example.test")
+    signal = collector._item_to_signal(
+        {
+            "id": 44,
+            "title": "Hannah Fry Wins Leelavati Prize",
+            "url": "https://example.com/prize",
+            "by": "reader",
+            "score": 200,
+            "descendants": 50,
+            "time": 1_700_000_000,
+        }
+    )
+
+    assert signal is None
+
+
 def test_hackernews_item_truncates_long_text():
     collector = HackerNewsCollector(base_url="https://example.test")
     signal = collector._item_to_signal(

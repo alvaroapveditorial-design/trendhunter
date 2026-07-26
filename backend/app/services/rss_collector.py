@@ -17,6 +17,18 @@ FEED_KEYWORDS = {
     "techcrunch_startups": "startup news",
 }
 
+# These feeds mix genuine startup/tech content with general news -- require
+# at least one signal that an item is actually about technology, developer
+# tooling, AI, or a business/startup before it becomes a trend.
+RELEVANCE_TERMS = {
+    "ai", "llm", "agent", "agents", "copilot", "automation", "saas", "software",
+    "app", "platform", "tool", "product", "api", "sdk",
+    "developer", "database", "github", "open source", "framework", "library",
+    "startup", "founder", "funding", "raised", "raises", "venture", "investor",
+    "seed round", "series a", "series b", "acquisition", "acquired", "valuation",
+    "launch", "launches", "privacy", "gdpr", "compliance",
+}
+
 
 class RSSCollector:
     """Collect RSS or Atom feed entries and map them to trend signals."""
@@ -72,6 +84,9 @@ class RSSCollector:
         clean_title = self._clean(title)[:180]
         clean_summary = self._clean(summary)
 
+        if not self._is_relevant(clean_title, clean_summary, feed_key):
+            return None
+
         return SignalIngest(
             title=clean_title,
             content=clean_summary,
@@ -126,6 +141,15 @@ class RSSCollector:
         without_boilerplate = re.sub(r"\bDiscussion\s*\|\s*Link\b", " ", without_tags, flags=re.IGNORECASE)
         normalized = re.sub(r"\s+", " ", html.unescape(without_boilerplate)).strip()
         return normalized[:1800]
+
+    def _is_relevant(self, title: str, content: str, feed_key: str) -> bool:
+        # Product Hunt's whole feed is product launches by construction --
+        # every item is on-topic, so keyword-gating it only drops real
+        # products with plain-English descriptions ("Shopify connector").
+        if feed_key == "producthunt":
+            return True
+        lowered = f"{title} {content}".lower()
+        return any(term in lowered for term in RELEVANCE_TERMS)
 
     def _keywords(self, title: str, content: str, feed_key: str) -> list[str]:
         lowered = f"{title} {content}".lower()
