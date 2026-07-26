@@ -7,6 +7,7 @@ import httpx
 
 from app.core.config import get_settings
 from app.schemas.schemas import SignalIngest
+from app.services.text_filters import looks_non_english
 
 # GitHub's `topic:ai` search also surfaces interview prep guides, awesome-lists,
 # and course material that happen to be tagged "ai" -- real signal for a course
@@ -74,6 +75,8 @@ class GitHubCollector:
         signals = []
         for repo in payload.get("items", [])[:max_items]:
             if self._looks_like_reference_content(repo):
+                continue
+            if looks_non_english(repo.get("description") or ""):
                 continue
             signals.append(self._repo_to_signal(repo))
         return signals

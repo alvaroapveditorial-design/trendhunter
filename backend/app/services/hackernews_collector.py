@@ -9,6 +9,7 @@ import httpx
 
 from app.core.config import get_settings
 from app.schemas.schemas import SignalIngest
+from app.services.text_filters import looks_non_english
 
 MAX_SIGNAL_CONTENT_LENGTH = 2000
 
@@ -71,6 +72,8 @@ class HackerNewsCollector:
         if not title:
             return None
         if not self._is_relevant(title):
+            return None
+        if looks_non_english(title):
             return None
 
         published_at = None

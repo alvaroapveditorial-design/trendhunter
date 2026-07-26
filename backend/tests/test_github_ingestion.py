@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.schemas.schemas import SignalIngest
 from app.services.github_collector import GitHubCollector
+from app.services.text_filters import looks_non_english
 
 
 def test_github_endpoint_ingests_collected_repositories(monkeypatch):
@@ -225,6 +226,54 @@ def test_distinct_repos_get_distinct_scores(monkeypatch):
     trends = {trend["title"]: trend for trend in response.json()["trends"]}
     assert trends["Small Tool"]["trend_score"] != trends["Big Tool"]["trend_score"]
     assert trends["Big Tool"]["trend_score"] > trends["Small Tool"]["trend_score"]
+
+
+def test_non_english_repo_is_filtered_out(monkeypatch):
+    """Regression test: a repo with a non-English description must never
+    become a trend -- there's no translation step, so it would just show up
+    broken to an English-only audience."""
+
+    def fake_collect(self, query=None, limit=10):
+        response_items = [
+            {
+                "id": 1,
+                "full_name": "acme/lanhu-mcp",
+                "html_url": "https://github.com/acme/lanhu-mcp",
+                "description": "⚡需求分析效率提升 200%！全球首个为 AI 编程时代设计的团队协作 MCP 服务器",
+                "owner": {"login": "acme"},
+                "topics": ["ai", "mcp"],
+                "stargazers_count": 900,
+                "open_issues_count": 10,
+                "forks_count": 20,
+            },
+            {
+                "id": 2,
+                "full_name": "acme/agent-runtime",
+                "html_url": "https://github.com/acme/agent-runtime",
+                "description": "Production runtime for deploying AI agents.",
+                "owner": {"login": "acme"},
+                "topics": ["ai", "agents"],
+                "stargazers_count": 800,
+                "open_issues_count": 12,
+                "forks_count": 40,
+            },
+        ]
+        collector = GitHubCollector(base_url="https://example.test")
+        return [
+            collector._repo_to_signal(repo)
+            for repo in response_items
+            if not collector._looks_like_reference_content(repo)
+            and not looks_non_english(repo.get("description") or "")
+        ]
+
+    monkeypatch.setattr(GitHubCollector, "collect", fake_collect)
+
+    with TestClient(app) as client:
+        response = client.post("/api/v1/ingestion/github?limit=2")
+
+    assert response.status_code == 201
+    titles = [trend["title"] for trend in response.json()["trends"]]
+    assert not any("lanhu" in title.lower() for title in titles)
 
 
 def test_reference_content_is_filtered_out(monkeypatch):

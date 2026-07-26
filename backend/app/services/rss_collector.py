@@ -10,6 +10,7 @@ import httpx
 
 from app.core.config import get_settings
 from app.schemas.schemas import SignalIngest
+from app.services.text_filters import looks_non_english
 
 FEED_KEYWORDS = {
     "hn_frontpage": "hacker news",
@@ -85,6 +86,8 @@ class RSSCollector:
         clean_summary = self._clean(summary)
 
         if not self._is_relevant(clean_title, clean_summary, feed_key):
+            return None
+        if looks_non_english(f"{clean_title} {clean_summary}"):
             return None
 
         return SignalIngest(
