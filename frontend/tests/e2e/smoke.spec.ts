@@ -8,12 +8,12 @@ import { expect, test } from "@playwright/test";
 // that are actually reachable unauthenticated after every deploy: the
 // public pages render, and the paywall itself is enforced.
 
-test("landing page renders with the beta signup form", async ({ page }) => {
+test("landing page renders with the updates signup form", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "AI Trend Hunter" })).toBeVisible();
   await expect(page.locator("#beta-form")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Request beta access" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Keep me posted" })).toBeVisible();
 });
 
 test("pricing page renders the checkout form", async ({ page }) => {

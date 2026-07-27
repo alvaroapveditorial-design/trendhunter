@@ -22,13 +22,12 @@ export default function ErrorPage({
   return (
     <main className="shell">
       <section className="app-error">
-        <p className="eyebrow">Dashboard error</p>
-        <h1>Could not load AI Trend Hunter</h1>
+        <p className="eyebrow">Something went wrong</p>
+        <h1>We couldn&apos;t load this page</h1>
         <p>
-          Check that the backend is running on `http://localhost:8000`, then retry the
-          dashboard.
+          This is usually temporary. Retry in a few seconds — if it keeps happening,
+          email us at alvaroapveditorial@hotmail.com and we&apos;ll take a look.
         </p>
-        <pre>{error.message}</pre>
         <button type="button" onClick={reset}>
           Retry
         </button>

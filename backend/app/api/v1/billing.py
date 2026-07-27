@@ -220,24 +220,37 @@ def handle_stripe_event(db: Session, event: dict) -> None:
 
     if event_type == "checkout.session.completed":
         new_status = data_object.get("subscription_status") or "trialing"
+        checkout_session_id = data_object.get("id")
+        # Stripe delivers webhooks at-least-once. The upsert below is naturally
+        # idempotent, but the analytics events are not (Plausible would count a
+        # second "Trial Started"), so skip them on redelivery of a session we
+        # already recorded. The subscription.* branch is self-guarding via its
+        # previous_status check.
+        already_recorded = bool(checkout_session_id) and (
+            db.query(Subscription)
+            .filter(Subscription.stripe_checkout_session_id == checkout_session_id)
+            .first()
+            is not None
+        )
         subscription = _upsert_subscription(
             db,
             email=data_object.get("customer_email"),
             status_value=new_status,
             stripe_customer_id=data_object.get("customer"),
             stripe_subscription_id=data_object.get("subscription"),
-            stripe_checkout_session_id=data_object.get("id"),
+            stripe_checkout_session_id=checkout_session_id,
         )
-        send_capi_event(
-            "StartTrial",
-            email=subscription.email,
-            event_id=event_id,
-            event_source_url=f"{settings.APP_URL.rstrip('/')}/pricing",
-        )
-        send_plausible_event(
-            "Trial Started" if new_status == "trialing" else "Checkout Completed",
-            path="/pricing",
-        )
+        if not already_recorded:
+            send_capi_event(
+                "StartTrial",
+                email=subscription.email,
+                event_id=event_id,
+                event_source_url=f"{settings.APP_URL.rstrip('/')}/pricing",
+            )
+            send_plausible_event(
+                "Trial Started" if new_status == "trialing" else "Checkout Completed",
+                path="/pricing",
+            )
         return
 
     if event_type in {"customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted"}:

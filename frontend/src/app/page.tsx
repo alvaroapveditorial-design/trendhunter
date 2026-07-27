@@ -70,7 +70,7 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
             app.aitrendhunter.app/dashboard
           </div>
           <div class="app__bar-right">
-            <span class="tag tag--accent">BETA</span>
+            <span class="tag tag--accent">LIVE</span>
             <div class="app__avatar"></div>
           </div>
         </div>
@@ -367,7 +367,7 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
         <div class="case__ic"><svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
         <div>
           <h3>Monitor emerging niches</h3>
-          <p>Add a category to your watchlist and get alerted the moment momentum or saturation crosses your threshold.</p>
+          <p>Check the emerging-markets and accelerating shortlists each week to catch niches while they're still early. Keyword alerts coming soon.</p>
         </div>
       </div>
       <div class="case reveal">
@@ -381,7 +381,7 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
         <div class="case__ic"><svg viewBox="0 0 24 24" fill="none"><path d="M6 3h9l5 5v13H6z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 12h7M9 16h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
         <div>
           <h3>Prep weekly opportunity reports</h3>
-          <p>Export a clean, source-backed brief for your team or investors in minutes, without copy-pasting from a dozen tabs.</p>
+          <p>Walk your team or investors through a source-backed brief straight from the dashboard, without copy-pasting from a dozen tabs. PDF export coming soon.</p>
         </div>
       </div>
     </div>
@@ -422,7 +422,7 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
           </div>
           <div class="scard__foot">
             <div class="scard__sources"><span class="src src--gh"><i></i>GitHub</span><span class="src src--hn"><i></i>HN</span></div>
-            <a href="#beta" class="scard__link">Open brief <svg viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            <a href="/pricing" class="scard__link">Open brief <svg viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
           </div>
         </article>
 
@@ -442,7 +442,7 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
           </div>
           <div class="scard__foot">
             <div class="scard__sources"><span class="src src--gh"><i></i>GitHub</span><span class="src src--rss"><i></i>RSS</span></div>
-            <a href="#beta" class="scard__link">Open brief <svg viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            <a href="/pricing" class="scard__link">Open brief <svg viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
           </div>
         </article>
 
@@ -462,7 +462,7 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
           </div>
           <div class="scard__foot">
             <div class="scard__sources"><span class="src src--rss"><i></i>RSS</span><span class="src src--hn"><i></i>HN</span></div>
-            <a href="#beta" class="scard__link">Open brief <svg viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+            <a href="/pricing" class="scard__link">Open brief <svg viewBox="0 0 24 24" fill="none"><path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
           </div>
         </article>
       </div>
@@ -475,12 +475,12 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
   <div class="container">
     <div class="beta__card reveal">
       <div class="beta__left">
-        <span class="eyebrow">Private beta</span>
-        <h2>Join the private beta</h2>
-        <p class="lead">We're onboarding a small group of founders and product operators to help shape what gets scored, summarized, and built next.</p>
+        <span class="eyebrow">Not ready to start the trial?</span>
+        <h2>Stay in the loop</h2>
+        <p class="lead">AI Trend Hunter is live — you can <a href="/pricing" style="text-decoration:underline;">start the 7-day trial today</a>. If you'd rather watch first, leave your email and we'll keep you posted.</p>
         <ul class="beta__points">
-          <li><svg viewBox="0 0 24 24" fill="none"><path d="m5 13 4 4 10-10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Early access to the scored trends dashboard</li>
-          <li><svg viewBox="0 0 24 24" fill="none"><path d="m5 13 4 4 10-10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Opportunity briefs when we open the beta</li>
+          <li><svg viewBox="0 0 24 24" fill="none"><path d="m5 13 4 4 10-10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Occasional updates when new features ship</li>
+          <li><svg viewBox="0 0 24 24" fill="none"><path d="m5 13 4 4 10-10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Standout opportunities we spot along the way</li>
           <li><svg viewBox="0 0 24 24" fill="none"><path d="m5 13 4 4 10-10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>A direct line to shape the roadmap</li>
         </ul>
       </div>
@@ -518,15 +518,15 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
           </div>
 
           <div class="form__foot">
-            <button type="submit" class="btn btn--primary btn--lg btn--block" id="submit-btn">Request beta access</button>
-            <p class="form__micro">We're onboarding a small group of founders and product operators. No spam: just early access and the occasional brief.</p>
+            <button type="submit" class="btn btn--primary btn--lg btn--block" id="submit-btn">Keep me posted</button>
+            <p class="form__micro">No spam — just occasional product updates and the odd standout opportunity.</p>
           </div>
         </form>
 
         <div class="form-success" id="form-success">
           <div class="form-success__ic"><svg viewBox="0 0 24 24" fill="none"><path d="m5 13 4 4 10-10" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
           <h3>You're on the list.</h3>
-          <p>Thanks. We'll reach out when we open the next batch of beta spots. Keep an eye on your inbox.</p>
+          <p>Thanks — we'll keep you posted. Whenever you're ready, the 7-day trial is one click away on the pricing page.</p>
           <div class="mono-line" id="success-line">→ confirmation queued</div>
         </div>
       </div>
@@ -553,7 +553,7 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
           <a href="#solution">How it works</a>
           <a href="#features">Features</a>
           <a href="#samples">Sample output</a>
-          <a href="#beta">Join the beta</a>
+          <a href="#beta">Get product updates</a>
         </div>
         <div class="footer__col">
           <h6>Sources</h6>

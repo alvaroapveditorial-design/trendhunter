@@ -105,7 +105,7 @@ export default async function DashboardPage({
 
   const params = (await searchParams) ?? {};
   const minScore = params.min_score ? Number(params.min_score) : undefined;
-  const [trends, categories, sources, spotlight] = await Promise.all([
+  const [trends, categories, sources, spotlight, runs] = await Promise.all([
     getTrends({
       q: params.q,
       category: params.category,
@@ -115,14 +115,19 @@ export default async function DashboardPage({
     getCategories(),
     getSources(),
     getTrendSpotlight(),
+    getIngestionRuns(),
   ]);
-  const runs = await getIngestionRuns();
 
   // Trust a ?trend= slug even if it comes from the spotlight (top opportunities,
   // emerging markets, etc.) rather than the currently filtered list below --
-  // getTrend() resolves it directly against the backend either way.
-  const selectedSlug = params.trend || trends[0]?.slug;
-  const selectedTrend = selectedSlug ? await getTrend(selectedSlug) : null;
+  // getTrend() resolves it directly against the backend either way. A stale
+  // slug (bookmarked link to a since-deactivated trend) must degrade to the
+  // top trend, not error the whole page.
+  let selectedTrend = params.trend ? await getTrend(params.trend).catch(() => null) : null;
+  if (!selectedTrend && trends[0]) {
+    selectedTrend = await getTrend(trends[0].slug).catch(() => null);
+  }
+  const selectedSlug = selectedTrend?.slug;
   const topTrend = trends[0];
   const hasActiveFilters = Boolean(params.q || params.category || params.source_type || params.min_score);
   const brief = spotlight.best_opportunity?.opportunity_brief;

@@ -66,6 +66,9 @@ app = FastAPI(
     version="0.1.0",
     docs_url=None if settings.is_production else "/docs",
     redoc_url=None if settings.is_production else "/redoc",
+    # docs_url/redoc_url only hide the UI pages -- the raw schema stays served
+    # at /openapi.json unless it is disabled too, exposing the full API surface.
+    openapi_url=None if settings.is_production else "/openapi.json",
     lifespan=lifespan,
 )
 

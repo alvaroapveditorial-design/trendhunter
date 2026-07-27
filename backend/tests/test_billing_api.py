@@ -178,6 +178,61 @@ def test_stripe_webhook_creates_subscription(monkeypatch):
         db.close()
 
 
+def test_stripe_webhook_redelivery_fires_analytics_once(monkeypatch):
+    """Regression test: Stripe delivers webhooks at-least-once. A redelivered
+    checkout.session.completed must not double-fire the analytics events
+    (Plausible has no event-id dedup), and must still return 200 so Stripe
+    stops retrying."""
+    secret = "whsec_test_secret"
+    session_id = f"cs_test_{uuid4()}"
+    event = {
+        "id": f"evt_{uuid4()}",
+        "type": "checkout.session.completed",
+        "data": {
+            "object": {
+                "id": session_id,
+                "customer": f"cus_{uuid4()}",
+                "customer_email": f"retry-{uuid4()}@example.com",
+                "subscription": f"sub_{uuid4()}",
+                "subscription_status": "trialing",
+            }
+        },
+    }
+    payload = json.dumps(event, separators=(",", ":")).encode("utf-8")
+    monkeypatch.setattr(billing.settings, "STRIPE_WEBHOOK_SECRET", secret)
+
+    capi_calls = []
+    plausible_calls = []
+    monkeypatch.setattr(billing, "send_capi_event", lambda *a, **k: capi_calls.append(a))
+    monkeypatch.setattr(billing, "send_plausible_event", lambda *a, **k: plausible_calls.append(a))
+
+    with TestClient(app) as client:
+        for _ in range(2):
+            response = client.post(
+                "/api/v1/billing/webhook",
+                content=payload,
+                headers={
+                    "Content-Type": "application/json",
+                    "Stripe-Signature": _stripe_signature(payload, secret),
+                },
+            )
+            assert response.status_code == 200
+
+    assert len(capi_calls) == 1
+    assert len(plausible_calls) == 1
+
+    db = SessionLocal()
+    try:
+        rows = (
+            db.query(Subscription)
+            .filter(Subscription.stripe_checkout_session_id == session_id)
+            .count()
+        )
+        assert rows == 1
+    finally:
+        db.close()
+
+
 def test_checkout_blocked_when_subscription_active(monkeypatch):
     email = f"active-{uuid4()}@example.com"
     db = SessionLocal()

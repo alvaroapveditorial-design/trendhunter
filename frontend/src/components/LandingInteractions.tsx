@@ -153,7 +153,7 @@ export function LandingInteractions() {
         track("Beta Signup Completed", { role: roleEl.value });
       } catch (error) {
         if (button) {
-          button.textContent = "Request beta access";
+          button.textContent = "Keep me posted";
           button.disabled = false;
         }
         if (formMicro) {
