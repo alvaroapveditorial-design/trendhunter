@@ -178,6 +178,69 @@ def test_stripe_webhook_creates_subscription(monkeypatch):
         db.close()
 
 
+def test_stripe_webhook_marks_trial_cancellation_scheduled_via_cancel_at(monkeypatch):
+    """Regression test: canceling a trialing subscription through the Stripe
+    billing portal schedules it via `cancel_at` (a timestamp), not by flipping
+    `cancel_at_period_end` -- Stripe only sets that boolean once the
+    subscription has left its trial. Verified against a real cancellation in
+    production: Stripe's webhook payload had cancel_at_period_end=False and
+    cancel_at=<trial end timestamp> at the same time."""
+    secret = "whsec_test_secret"
+    subscription_id = f"sub_{uuid4()}"
+
+    created_event = {
+        "id": f"evt_{uuid4()}",
+        "type": "customer.subscription.created",
+        "data": {
+            "object": {
+                "id": subscription_id,
+                "customer": f"cus_{uuid4()}",
+                "status": "trialing",
+                "cancel_at_period_end": False,
+                "cancel_at": None,
+            }
+        },
+    }
+    canceled_event = {
+        "id": f"evt_{uuid4()}",
+        "type": "customer.subscription.updated",
+        "data": {
+            "object": {
+                "id": subscription_id,
+                "customer": f"cus_{uuid4()}",
+                "status": "trialing",
+                "cancel_at_period_end": False,
+                "cancel_at": 1785602643,
+            }
+        },
+    }
+    monkeypatch.setattr(billing.settings, "STRIPE_WEBHOOK_SECRET", secret)
+
+    with TestClient(app) as client:
+        for event in (created_event, canceled_event):
+            payload = json.dumps(event, separators=(",", ":")).encode("utf-8")
+            response = client.post(
+                "/api/v1/billing/webhook",
+                content=payload,
+                headers={
+                    "Content-Type": "application/json",
+                    "Stripe-Signature": _stripe_signature(payload, secret),
+                },
+            )
+            assert response.status_code == 200
+
+    db = SessionLocal()
+    try:
+        subscription = (
+            db.query(Subscription)
+            .filter(Subscription.stripe_subscription_id == subscription_id)
+            .first()
+        )
+        assert subscription.cancel_at_period_end is True
+    finally:
+        db.close()
+
+
 def test_stripe_webhook_redelivery_fires_analytics_once(monkeypatch):
     """Regression test: Stripe delivers webhooks at-least-once. A redelivered
     checkout.session.completed must not double-fire the analytics events

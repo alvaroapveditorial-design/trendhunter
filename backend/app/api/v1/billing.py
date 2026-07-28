@@ -271,7 +271,12 @@ def handle_stripe_event(db: Session, event: dict) -> None:
             stripe_subscription_id=stripe_subscription_id,
             current_period_end=_utc_from_stripe_timestamp(data_object.get("current_period_end")),
             trial_end=_utc_from_stripe_timestamp(data_object.get("trial_end")),
-            cancel_at_period_end=bool(data_object.get("cancel_at_period_end", False)),
+            # Canceling a trialing subscription schedules it via `cancel_at`
+            # (a specific timestamp) rather than flipping `cancel_at_period_end`
+            # -- Stripe only sets that boolean once the subscription has left
+            # its trial. Either one means "won't renew", so treat both as such.
+            cancel_at_period_end=bool(data_object.get("cancel_at_period_end"))
+            or data_object.get("cancel_at") is not None,
         )
 
         if previous_status == "trialing" and new_status == "active":
