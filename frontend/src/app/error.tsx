@@ -26,7 +26,7 @@ export default function ErrorPage({
         <h1>We couldn&apos;t load this page</h1>
         <p>
           This is usually temporary. Retry in a few seconds — if it keeps happening,
-          email us at alvaroapveditorial@hotmail.com and we&apos;ll take a look.
+          <a href="/contact"> contact support</a> and we&apos;ll take a look.
         </p>
         <button type="button" onClick={reset}>
           Retry

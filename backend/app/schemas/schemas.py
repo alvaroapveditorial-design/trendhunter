@@ -53,6 +53,28 @@ class BetaSignupResponse(BaseModel):
     already_registered: bool = False
 
 
+# ===== SUPPORT SCHEMAS =====
+class SupportContactCreate(BaseModel):
+    """Public contact-form submission, relayed to the support inbox by email."""
+
+    email: str = Field(min_length=5, max_length=254, pattern=r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+    message: str = Field(min_length=10, max_length=2000)
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip().lower()
+        return value
+
+    @field_validator("message", mode="before")
+    @classmethod
+    def normalize_message(cls, value: object) -> object:
+        if isinstance(value, str):
+            return value.strip()
+        return value
+
+
 # ===== BILLING SCHEMAS =====
 class CheckoutSessionCreate(BaseModel):
     """Request body for Stripe Checkout subscription creation."""

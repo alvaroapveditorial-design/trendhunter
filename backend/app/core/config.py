@@ -83,6 +83,7 @@ class Settings(BaseSettings):
     # ===== EMAIL =====
     RESEND_API_KEY: str = ""
     SENDER_EMAIL: str = "noreply@trendhunter.io"
+    SUPPORT_EMAIL: str = ""
 
     # ===== BILLING =====
     STRIPE_SECRET_KEY: str = ""

@@ -566,7 +566,7 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
           <a href="#top">About</a>
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>
-          <a href="mailto:alvaroapveditorial@hotmail.com">Contact</a>
+          <a href="/contact">Contact</a>
         </div>
       </div>
     </div>

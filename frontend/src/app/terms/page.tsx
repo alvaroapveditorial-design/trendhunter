@@ -20,7 +20,8 @@ export default function TermsPage() {
           AI Trend Hunter is operated by Alvaro Perez Varela (self-employed / autónomo),
           NIF 22753641V, Calle Magallanes 17, 3D, 48903 Barakaldo, Spain.
           <br />
-          Support and contact: <a href="mailto:alvaroapveditorial@hotmail.com">alvaroapveditorial@hotmail.com</a>
+          Support and contact: <a href="/contact">contact form</a> or{" "}
+          <a href="mailto:alvaroapveditorial@hotmail.com">alvaroapveditorial@hotmail.com</a>
         </p>
 
         <h2>Service</h2>

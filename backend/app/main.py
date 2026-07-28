@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.v1 import auth, beta, billing, ingestion, trends
+from app.api.v1 import auth, beta, billing, ingestion, support, trends
 from app.core.config import get_settings
 from app.core.rate_limit import InMemoryRateLimiter
 from app.models.base import Base
@@ -39,7 +39,7 @@ RATE_LIMITED_PREFIXES = ("/api/v1/ingestion", "/api/v1/trends")
 # Billing writes are rate limited individually, not by prefix, so that
 # /api/v1/billing/webhook (called by Stripe's own servers, potentially in
 # bursts after any downtime) is never throttled.
-RATE_LIMITED_PATHS = {"/api/v1/billing/checkout", "/api/v1/billing/portal"}
+RATE_LIMITED_PATHS = {"/api/v1/billing/checkout", "/api/v1/billing/portal", "/api/v1/support/contact"}
 
 auth_code_rate_limiter = InMemoryRateLimiter(
     max_requests=settings.AUTH_CODE_RATE_LIMIT_REQUESTS,
@@ -167,6 +167,7 @@ app.include_router(ingestion.router, prefix="/api/v1/ingestion", tags=["Ingestio
 app.include_router(beta.router, prefix="/api/v1/beta", tags=["Beta"])
 app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Auth"])
+app.include_router(support.router, prefix="/api/v1/support", tags=["Support"])
 
 
 if __name__ == "__main__":

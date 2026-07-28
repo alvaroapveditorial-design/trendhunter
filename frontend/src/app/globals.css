@@ -1551,7 +1551,8 @@ a {
   text-transform: uppercase;
 }
 
-.login-form input {
+.login-form input,
+.login-form textarea {
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-sm);
   color: var(--ink);
@@ -1559,7 +1560,12 @@ a {
   padding: 13px 14px;
 }
 
-.login-form input:focus {
+.login-form textarea {
+  resize: vertical;
+}
+
+.login-form input:focus,
+.login-form textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
   outline: none;
