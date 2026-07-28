@@ -44,6 +44,13 @@ function sourceLabel(source?: string | null) {
   return source.replaceAll("_", " ");
 }
 
+function agentLabel(agentName: string) {
+  // agent_name is an internal identifier ("mvp_heuristic_detector") -- strip
+  // the "mvp" prefix so customers never see internal build-stage naming.
+  const cleaned = agentName.replaceAll("_", " ").replace(/^mvp\s+/i, "");
+  return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+}
+
 function sourceMetricsLabel(source: TrendSource) {
   // GitHub and Hacker News reuse the same upvotes/comments fields for
   // different underlying metrics (stars/open issues vs. real upvotes/
@@ -423,7 +430,7 @@ export default async function DashboardPage({
                     {runs.map((run) => (
                       <div className="run-row" key={run.id}>
                         <div>
-                          <strong>{run.agent_name.replaceAll("_", " ")}</strong>
+                          <strong>{agentLabel(run.agent_name)}</strong>
                           <span>
                             {run.records_processed} processed · {run.records_created} created ·{" "}
                             {run.records_updated} updated
