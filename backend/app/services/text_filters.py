@@ -29,11 +29,20 @@ def looks_non_english(text: str, threshold: float = 0.10) -> bool:
     description with a full translated clause appended after a separator
     ("... | 为 AI Tools 打造的...") -- while tolerating the occasional foreign
     proper noun inside an otherwise-English title/description.
+
+    Checked per "|"-separated segment, not just over the whole string: a
+    translated clause padded with the same Latin model names/numbers as the
+    English half (e.g. "... GB300 NVL72 | ... 开源持续推理基准研究平台 ...
+    GB300 NVL72") can dilute the non-Latin ratio below threshold when
+    measured globally, while the clause itself is clearly non-English.
     """
     if not text:
         return False
-    stripped = re.sub(r"\s+", "", text)
-    if not stripped:
-        return False
-    non_latin_count = len(_NON_LATIN_SCRIPT_PATTERN.findall(stripped))
-    return (non_latin_count / len(stripped)) >= threshold
+    for segment in text.split("|"):
+        stripped = re.sub(r"\s+", "", segment)
+        if not stripped:
+            continue
+        non_latin_count = len(_NON_LATIN_SCRIPT_PATTERN.findall(stripped))
+        if (non_latin_count / len(stripped)) >= threshold:
+            return True
+    return False

@@ -12,7 +12,7 @@ import {
   getTrends,
   getTrendSpotlight,
 } from "@/lib/api";
-import type { Trend } from "@/types/trend";
+import type { Trend, TrendSource } from "@/types/trend";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -42,6 +42,21 @@ function sourceLabel(source?: string | null) {
   if (source === "github") return "GitHub";
   if (source === "rss") return "RSS";
   return source.replaceAll("_", " ");
+}
+
+function sourceMetricsLabel(source: TrendSource) {
+  // GitHub and Hacker News reuse the same upvotes/comments fields for
+  // different underlying metrics (stars/open issues vs. real upvotes/
+  // comments) -- label each source type with what the numbers actually are.
+  // RSS's numbers are a synthetic recency estimate, not a real engagement
+  // signal, so they're left out entirely rather than shown as if factual.
+  if (source.source_type === "github") {
+    return `${formatNumber(source.upvotes)} stars · ${formatNumber(source.comments)} open issues`;
+  }
+  if (source.source_type === "hackernews") {
+    return `${formatNumber(source.upvotes)} upvotes · ${formatNumber(source.comments)} comments`;
+  }
+  return null;
 }
 
 function TopFive({
@@ -391,8 +406,8 @@ export default async function DashboardPage({
                   <div className="source" key={source.id}>
                     <strong>{source.title}</strong>
                     <span>
-                      {sourceLabel(source.source_type)} · {formatNumber(source.upvotes)} upvotes ·{" "}
-                      {formatNumber(source.comments)} comments
+                      {sourceLabel(source.source_type)}
+                      {sourceMetricsLabel(source) ? ` · ${sourceMetricsLabel(source)}` : ""}
                       {source.published_at ? ` · ${formatDateTime(source.published_at)}` : ""}
                     </span>
                   </div>

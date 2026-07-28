@@ -25,6 +25,23 @@ def test_detects_english_description_with_translated_clause_appended():
     assert looks_non_english(text) is True
 
 
+def test_detects_translated_clause_diluted_by_shared_latin_jargon():
+    """Regression test: a translated clause padded with the same Latin model
+    names/numbers as the English half can dilute the non-Latin ratio below
+    threshold when measured over the whole string, even though the clause
+    itself is clearly non-English once measured on its own."""
+    text = (
+        "Open Source Continuous Inference Benchmark Research Platform "
+        "— Kimi K2.7-Code, MiniMax M3, DeepSeekv4, GLM5 - GB200 NVL72 vs "
+        "MI355X vs B200 vs GB300 NVL72 & soon™ TPUv6e/v7/Trainium2/3 | "
+        "开源持续推理基准研究平台 "
+        "— Kimi K2.7-Code、MiniMax M3、DeepSeekv4、GLM5 - GB200 "
+        "NVL72 vs MI355X vs B200 vs GB300 NVL72，即将推出™ "
+        "TPUv6e/v7/Trainium2/3"
+    )
+    assert looks_non_english(text) is True
+
+
 def test_allows_plain_english():
     text = "A Model Context Protocol server for searching and analyzing arXiv papers"
     assert looks_non_english(text) is False
