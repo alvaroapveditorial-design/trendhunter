@@ -11,8 +11,26 @@ from sqlalchemy.orm import Session
 
 from app.models.base import AgentExecution, Trend, TrendSource
 from app.schemas.schemas import IngestionRunResponse, SignalBatchIngest, SignalIngest
+from app.services.text_filters import RELEVANCE_TERMS, looks_non_english
 
 logger = logging.getLogger(__name__)
+
+# Collectors already filter for relevance/language before building a signal,
+# but the admin-only /ingestion/signals endpoint accepts raw signals directly
+# and bypasses that -- so this is the one choke point every signal passes
+# through no matter how it got here. GitHub signals aren't checked for topic
+# relevance: the search query (topic:ai) already scopes them.
+_RELEVANCE_CHECKED_SOURCES = {"hackernews", "rss"}
+
+
+def _passes_content_quality_gate(signal: SignalIngest) -> bool:
+    haystack = f"{signal.title} {signal.content or ''}"
+    if looks_non_english(haystack):
+        return False
+    if signal.source_type in _RELEVANCE_CHECKED_SOURCES:
+        if not any(term in haystack.lower() for term in RELEVANCE_TERMS):
+            return False
+    return True
 
 # --- Scoring weights (all values sum to 100 max contribution) ---
 _SCORE_BASE = 25          # floor score every detected trend starts with
@@ -245,6 +263,8 @@ class DetectorService:
 
         try:
             for signal in payload.signals:
+                if not _passes_content_quality_gate(signal):
+                    continue
                 trend, was_created = self._upsert_signal(signal)
                 if was_created:
                     created += 1

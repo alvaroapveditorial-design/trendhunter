@@ -9,24 +9,9 @@ import httpx
 
 from app.core.config import get_settings
 from app.schemas.schemas import SignalIngest
-from app.services.text_filters import looks_non_english
+from app.services.text_filters import RELEVANCE_TERMS, looks_non_english
 
 MAX_SIGNAL_CONTENT_LENGTH = 2000
-
-# HN's front page mixes tech/startup content with general news, science, and
-# culture -- without a relevance gate, stories with nothing to do with SaaS
-# or software (e.g. a mathematician winning a prize) end up scored as
-# "opportunities". Require at least one signal that this is actually about
-# technology, developer tooling, AI, or a business/startup, before letting a
-# story become a trend.
-RELEVANCE_TERMS = {
-    "ai", "llm", "agent", "agents", "copilot", "automation", "saas", "software",
-    "app", "platform", "tool", "product", "api", "sdk",
-    "developer", "database", "github", "open source", "framework", "library",
-    "startup", "founder", "funding", "raised", "raises", "venture", "investor",
-    "seed round", "series a", "series b", "acquisition", "acquired", "valuation",
-    "launch", "launches", "privacy", "gdpr", "compliance",
-}
 
 
 class HackerNewsCollector:

@@ -10,24 +10,12 @@ import httpx
 
 from app.core.config import get_settings
 from app.schemas.schemas import SignalIngest
-from app.services.text_filters import looks_non_english
+from app.services.text_filters import RELEVANCE_TERMS, looks_non_english
 
 FEED_KEYWORDS = {
     "hn_frontpage": "hacker news",
     "producthunt": "product hunt",
     "techcrunch_startups": "startup news",
-}
-
-# These feeds mix genuine startup/tech content with general news -- require
-# at least one signal that an item is actually about technology, developer
-# tooling, AI, or a business/startup before it becomes a trend.
-RELEVANCE_TERMS = {
-    "ai", "llm", "agent", "agents", "copilot", "automation", "saas", "software",
-    "app", "platform", "tool", "product", "api", "sdk",
-    "developer", "database", "github", "open source", "framework", "library",
-    "startup", "founder", "funding", "raised", "raises", "venture", "investor",
-    "seed round", "series a", "series b", "acquisition", "acquired", "valuation",
-    "launch", "launches", "privacy", "gdpr", "compliance",
 }
 
 

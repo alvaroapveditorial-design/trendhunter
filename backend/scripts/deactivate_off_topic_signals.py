@@ -10,13 +10,10 @@ import logging
 
 from app.models.base import Trend
 from app.models.database import SessionLocal
-from app.services.hackernews_collector import RELEVANCE_TERMS
-from app.services.rss_collector import RELEVANCE_TERMS as RSS_RELEVANCE_TERMS
+from app.services.text_filters import RELEVANCE_TERMS
 
 logging.basicConfig(level="INFO")
 logger = logging.getLogger("deactivate_off_topic_signals")
-
-ALL_RELEVANCE_TERMS = RELEVANCE_TERMS | RSS_RELEVANCE_TERMS
 
 
 def main() -> None:
@@ -29,7 +26,7 @@ def main() -> None:
             if not source_types & {"hackernews", "rss"}:
                 continue
             haystack = " ".join([trend.title or "", trend.description or ""]).lower()
-            if not any(term in haystack for term in ALL_RELEVANCE_TERMS):
+            if not any(term in haystack for term in RELEVANCE_TERMS):
                 trend.is_active = False
                 deactivated.append(trend.title)
         db.commit()

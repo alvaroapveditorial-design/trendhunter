@@ -66,6 +66,65 @@ def test_manual_signal_ingestion_returns_scored_trend():
     assert payload["trends"][0]["category"] == "ai_saas"
 
 
+def test_off_topic_hackernews_signal_via_raw_endpoint_is_skipped():
+    """Regression test: found live -- 'Half-Life ported to Mac OS 9' became a
+    trend despite HackerNewsCollector's own relevance filter rejecting it,
+    because it arrived through the raw /ingestion/signals endpoint, which
+    bypasses collector-level filtering entirely. DetectorService must enforce
+    the same relevance gate as a choke point, not just the collectors."""
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/ingestion/signals",
+            json={
+                "signals": [
+                    {
+                        "title": "Half-Life ported to Mac OS 9",
+                        "content": "A hobbyist project porting the 1998 game to a 2001 operating system.",
+                        "source_type": "hackernews",
+                        "source_id": "off-topic-regression-test",
+                        "upvotes": 200,
+                        "comments": 40,
+                    }
+                ]
+            },
+        )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["processed_signals"] == 1
+    assert payload["created_trends"] == 0
+    assert payload["updated_trends"] == 0
+    assert payload["trends"] == []
+
+
+def test_non_english_signal_via_raw_endpoint_is_skipped():
+    """Regression test for the same class of bug as the off-topic one above,
+    but for language: the raw /ingestion/signals endpoint has no source-type
+    dependent filter at all, so without a central gate any source_type could
+    carry non-English content straight through."""
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/ingestion/signals",
+            json={
+                "signals": [
+                    {
+                        "title": "开源持续推理基准研究平台的最新更新",
+                        "content": "这是一个关于开源推理平台的中文描述内容测试",
+                        "source_type": "github",
+                        "source_id": "non-english-regression-test",
+                        "upvotes": 100,
+                        "comments": 5,
+                    }
+                ]
+            },
+        )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert payload["created_trends"] == 0
+    assert payload["updated_trends"] == 0
+
+
 def test_signal_keywords_drop_filler_words():
     with TestClient(app) as client:
         response = client.post(

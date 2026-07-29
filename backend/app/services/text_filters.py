@@ -7,6 +7,33 @@ looks broken to an English-only audience) or skipped. These filters skip.
 
 import re
 
+# HN's front page and general RSS feeds mix genuine startup/tech/AI content
+# with general news, science, and culture -- require at least one signal that
+# an item is actually about technology, developer tooling, AI, or a business/
+# startup before it becomes a trend. Single source of truth (was duplicated
+# between the HN and RSS collectors, which had let them drift).
+#
+# Found live: several genuinely AI-relevant stories were being rejected
+# because the list only had generic words ("ai", "llm", "agent") and missed
+# actual AI model/company/technique names -- "Ilya Sutskever ... Safe
+# Superintelligence", "Kimi K3", "PyTorch", "RL fine-tune of an open model"
+# all failed the old list even though they're exactly what an AI trend
+# hunter should surface.
+RELEVANCE_TERMS = {
+    "ai", "llm", "agent", "agents", "copilot", "automation", "saas", "software",
+    "app", "platform", "tool", "product", "api", "sdk",
+    "developer", "database", "github", "open source", "framework", "library",
+    "startup", "founder", "funding", "raised", "raises", "venture", "investor",
+    "seed round", "series a", "series b", "acquisition", "acquired", "valuation",
+    "launch", "launches", "privacy", "gdpr", "compliance",
+    "model", "models", "transformer", "transformers", "neural", "inference",
+    "fine-tune", "fine-tuning", "training run", "open-weights", "open weights",
+    "superintelligence", "benchmark", "gpt", "chatgpt", "claude", "opus",
+    "gemini", "llama", "mistral", "kimi", "deepseek", "grok", "pytorch",
+    "tensorflow", "anthropic", "openai", "deepmind", "nvidia", "cursor",
+    "codex",
+}
+
 # Unicode ranges for scripts that read as clearly non-English regardless of
 # any Latin characters mixed in (emoji, numbers, product names). Covers the
 # cases actually seen in ingested GitHub/RSS/HN content: CJK, Cyrillic, Arabic.
