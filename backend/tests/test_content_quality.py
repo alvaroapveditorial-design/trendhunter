@@ -2,8 +2,9 @@
 
 from uuid import uuid4
 
-from app.models.base import Trend, TrendSource
+from app.models.base import AgentExecution, Trend, TrendSource
 from app.models.database import SessionLocal
+from app.services import content_quality
 from app.services.content_quality import (
     deactivate_non_english_trends,
     deactivate_off_topic_trends,
@@ -125,5 +126,97 @@ def test_run_content_quality_cleanup_runs_both_passes():
 
         assert non_english.title in result["non_english"]
         assert off_topic.title in result["off_topic"]
+    finally:
+        db.close()
+
+
+def test_run_content_quality_cleanup_records_agent_execution():
+    """The cleanup must be visible in the same audit trail the ingestion
+    pipeline already uses (agent_executions -> "Recent pipeline runs" on
+    the dashboard), with the fields the CTO/CPO decision asked for: start
+    time, end time, reviewed count, deactivated count, duration, errors."""
+    db = SessionLocal()
+    try:
+        _make_trend(db, title="Audit Trail Regression", description="开源持续推理基准研究平台")
+
+        result = run_content_quality_cleanup(db)
+
+        execution = (
+            db.query(AgentExecution)
+            .filter(AgentExecution.agent_name == "content_quality_cleanup")
+            .order_by(AgentExecution.started_at.desc())
+            .first()
+        )
+        assert execution is not None
+        assert execution.status == "success"
+        assert execution.started_at is not None
+        assert execution.completed_at is not None
+        assert execution.duration_seconds is not None
+        assert execution.records_processed == result["reviewed"]
+        assert execution.records_updated == result["deactivated_total"]
+        assert execution.error_message is None
+        assert execution.output["non_english_deactivated"]
+    finally:
+        db.close()
+
+
+def test_run_content_quality_cleanup_is_idempotent():
+    """Running the cleanup twice in a row must not error, must not touch
+    already-deactivated trends again, and the second run should find
+    nothing left to do."""
+    db = SessionLocal()
+    try:
+        trend = _make_trend(
+            db, title="Idempotency Regression", description="开源持续推理基准研究平台"
+        )
+
+        first = run_content_quality_cleanup(db)
+        assert trend.title in first["non_english"]
+
+        second = run_content_quality_cleanup(db)
+        assert trend.title not in second["non_english"]
+        assert trend.title not in second["off_topic"]
+    finally:
+        db.close()
+
+
+def test_run_content_quality_cleanup_one_pass_failing_does_not_block_the_other(monkeypatch):
+    """A failure in one pass must be caught, rolled back, and recorded --
+    but must not prevent the other pass from running, and must not leave
+    is_active flags half-applied."""
+    db = SessionLocal()
+    try:
+        non_english_trend = _make_trend(
+            db, title="Failure Isolation Non-English", description="开源持续推理基准研究平台"
+        )
+        off_topic_trend = _make_trend(
+            db,
+            title="Off Topic Isolation Check",
+            description="A pub in London that is equidistant from three tube stations.",
+        )
+
+        def boom(_db):
+            raise RuntimeError("simulated failure")
+
+        monkeypatch.setattr(content_quality, "deactivate_non_english_trends", boom)
+
+        result = run_content_quality_cleanup(db)
+
+        assert result["errors"]
+        assert off_topic_trend.title in result["off_topic"]
+
+        execution = (
+            db.query(AgentExecution)
+            .filter(AgentExecution.agent_name == "content_quality_cleanup")
+            .order_by(AgentExecution.started_at.desc())
+            .first()
+        )
+        assert execution.status == "failed"
+        assert "simulated failure" in execution.error_message
+
+        db.refresh(non_english_trend)
+        db.refresh(off_topic_trend)
+        assert non_english_trend.is_active is True
+        assert off_topic_trend.is_active is False
     finally:
         db.close()
