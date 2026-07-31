@@ -1,16 +1,15 @@
-"""One-off cleanup: deactivate HN/RSS-sourced trends ingested before the
-relevance filter existed -- general news/science/culture stories that
-happened to make HN's front page or a startup-news feed, with nothing to do
-with SaaS or software (e.g. "Hannah Fry Wins Leelavati Prize").
+"""Manual one-off run of the off-topic cleanup pass.
 
-Soft delete via is_active=False, not a hard delete -- reversible.
+This now runs automatically every day as part of scheduled ingestion (see
+run_scheduled_ingestion.py); this script is kept for on-demand manual runs
+(e.g. right after widening RELEVANCE_TERMS, to clean up immediately instead
+of waiting for tomorrow's cron).
 """
 
 import logging
 
-from app.models.base import Trend
 from app.models.database import SessionLocal
-from app.services.text_filters import RELEVANCE_TERMS
+from app.services.content_quality import deactivate_off_topic_trends
 
 logging.basicConfig(level="INFO")
 logger = logging.getLogger("deactivate_off_topic_signals")
@@ -19,17 +18,7 @@ logger = logging.getLogger("deactivate_off_topic_signals")
 def main() -> None:
     db = SessionLocal()
     try:
-        trends = db.query(Trend).filter(Trend.is_active.is_(True)).all()
-        deactivated = []
-        for trend in trends:
-            source_types = {source.source_type for source in trend.sources}
-            if not source_types & {"hackernews", "rss"}:
-                continue
-            haystack = " ".join([trend.title or "", trend.description or ""]).lower()
-            if not any(term in haystack for term in RELEVANCE_TERMS):
-                trend.is_active = False
-                deactivated.append(trend.title)
-        db.commit()
+        deactivated = deactivate_off_topic_trends(db)
         logger.info("Deactivated %s trend(s): %s", len(deactivated), deactivated)
     finally:
         db.close()

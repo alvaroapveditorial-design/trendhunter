@@ -1,16 +1,15 @@
-"""One-off cleanup: deactivate trends ingested before the non-English filter
-existed -- e.g. a repo with a Chinese-language description ("Lanhu Mcp").
-There's no translation step in this product, so a non-English description
-just looks broken to an English-only audience.
+"""Manual one-off run of the non-English cleanup pass.
 
-Soft delete via is_active=False, not a hard delete -- reversible.
+This now runs automatically every day as part of scheduled ingestion (see
+run_scheduled_ingestion.py); this script is kept for on-demand manual runs
+(e.g. right after widening the language filter, to clean up immediately
+instead of waiting for tomorrow's cron).
 """
 
 import logging
 
-from app.models.base import Trend
 from app.models.database import SessionLocal
-from app.services.text_filters import looks_non_english
+from app.services.content_quality import deactivate_non_english_trends
 
 logging.basicConfig(level="INFO")
 logger = logging.getLogger("deactivate_non_english_signals")
@@ -19,14 +18,7 @@ logger = logging.getLogger("deactivate_non_english_signals")
 def main() -> None:
     db = SessionLocal()
     try:
-        trends = db.query(Trend).filter(Trend.is_active.is_(True)).all()
-        deactivated = []
-        for trend in trends:
-            haystack = f"{trend.title or ''} {trend.description or ''}"
-            if looks_non_english(haystack):
-                trend.is_active = False
-                deactivated.append(trend.title)
-        db.commit()
+        deactivated = deactivate_non_english_trends(db)
         logger.info("Deactivated %s trend(s): %s", len(deactivated), deactivated)
     finally:
         db.close()
