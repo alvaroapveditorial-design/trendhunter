@@ -77,7 +77,7 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
         <div class="app__body">
           <!-- sidebar -->
           <aside class="app__side">
-            <a class="brand" href="#"><span class="brand__mark"><svg viewBox="0 0 24 24" fill="none"><path d="M3 17.5 9.2 11l3.6 3.3L21 6.5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Trend Hunter</a>
+            <span class="brand"><span class="brand__mark"><svg viewBox="0 0 24 24" fill="none"><path d="M3 17.5 9.2 11l3.6 3.3L21 6.5" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Trend Hunter</span>
             <nav class="navlist">
               <a href="#top" class="is-active"><svg viewBox="0 0 24 24" fill="none"><path d="M4 19V9m5 10V5m5 14v-7m5 7V8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Trends</a>
               <a href="#top"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M12 3v3m0 12v3m9-9h-3M6 12H3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Sources</a>
