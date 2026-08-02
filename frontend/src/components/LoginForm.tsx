@@ -61,7 +61,7 @@ export function LoginForm() {
       if (!response.ok) {
         throw new Error(body?.detail || "Invalid or expired code.");
       }
-      track("Login");
+      track("Login Completed");
       window.location.href = body.has_active_subscription ? "/dashboard" : "/pricing";
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Invalid or expired code.");

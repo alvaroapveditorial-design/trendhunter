@@ -23,6 +23,7 @@ from app.schemas.schemas import (
     LoginVerifyRequest,
 )
 from app.services.email_service import send_login_code_email
+from app.services.plausible_events import send_plausible_event
 
 router = APIRouter()
 settings = get_settings()
@@ -70,6 +71,7 @@ def request_login_code(payload: LoginCodeRequest, db: Session = Depends(get_db))
     db.add(login_code)
     db.commit()
     sent = send_login_code_email(payload.email, code)
+    send_plausible_event("Login Code Requested", path="/login")
 
     # Returning the code only in non-production keeps local testing friction low
     # without exposing codes in deployed environments.

@@ -92,3 +92,18 @@ def test_request_login_code_sends_email_when_configured(monkeypatch):
     assert response.json()["code"] is None
     assert sent["email"] == email
     assert len(sent["code"]) == 6
+
+
+def test_request_login_code_fires_plausible_event(monkeypatch):
+    email = f"email-track-{uuid4()}@example.com"
+    monkeypatch.setattr(auth, "send_login_code_email", lambda *a, **k: True)
+
+    calls = []
+    monkeypatch.setattr(auth, "send_plausible_event", lambda *a, **k: calls.append(a))
+
+    with TestClient(app) as client:
+        response = client.post("/api/v1/auth/request-code", json={"email": email})
+
+    assert response.status_code == 200
+    assert len(calls) == 1
+    assert calls[0][0] == "Login Code Requested"

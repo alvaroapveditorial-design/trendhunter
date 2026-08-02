@@ -15,6 +15,7 @@ export function PricingCheckout() {
     setIsSubmitting(true);
     track("Sign Up Started");
     track("Checkout Started");
+    track("Pricing CTA Clicked");
 
     try {
       const response = await fetch("/api/backend/api/v1/billing/checkout", {
@@ -29,6 +30,7 @@ export function PricingCheckout() {
       if (!response.ok) {
         throw new Error(body?.detail || "We couldn't start checkout.");
       }
+      track("Checkout Created");
       window.location.href = body.checkout_url;
     } catch (err) {
       setIsSubmitting(false);

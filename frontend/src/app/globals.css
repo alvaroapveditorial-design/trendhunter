@@ -1248,6 +1248,7 @@ a {
 .landing-page .footer__cols { display: flex; gap: 64px; flex-wrap: wrap; }
 .landing-page .footer__col h6 { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); margin: 0 0 14px; font-weight: 500; }
 .landing-page .footer__col a { display: block; font-size: 14.5px; color: var(--ink-soft); margin-bottom: 10px; }
+.landing-page .footer__static { display: block; font-size: 14.5px; color: var(--muted); margin-bottom: 10px; }
 .landing-page .footer__col a:hover { color: var(--ink); }
 .landing-page .footer__bot { display: flex; justify-content: space-between; gap: 16px; margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); flex-wrap: wrap; font-family: var(--mono); }
 

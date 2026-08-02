@@ -25,6 +25,8 @@ def send_login_code_email(email: str, code: str) -> bool:
             f"{code}. Caduca en 10 minutos. Si no lo has solicitado, ignora este email."
         ),
     }
+    if settings.SUPPORT_EMAIL:
+        payload["reply_to"] = [settings.SUPPORT_EMAIL]
 
     with httpx.Client(timeout=10) as client:
         response = client.post(

@@ -251,6 +251,7 @@ def handle_stripe_event(db: Session, event: dict) -> None:
                 "Trial Started" if new_status == "trialing" else "Checkout Completed",
                 path="/pricing",
             )
+            send_plausible_event("Stripe Checkout Completed", path="/pricing")
         return
 
     if event_type in {"customer.subscription.created", "customer.subscription.updated", "customer.subscription.deleted"}:

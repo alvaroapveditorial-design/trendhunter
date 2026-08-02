@@ -282,7 +282,8 @@ def test_stripe_webhook_redelivery_fires_analytics_once(monkeypatch):
             assert response.status_code == 200
 
     assert len(capi_calls) == 1
-    assert len(plausible_calls) == 1
+    assert len(plausible_calls) == 2
+    assert {call[0] for call in plausible_calls} == {"Trial Started", "Stripe Checkout Completed"}
 
     db = SessionLocal()
     try:

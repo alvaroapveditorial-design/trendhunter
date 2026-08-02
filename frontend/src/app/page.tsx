@@ -70,7 +70,7 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
             app.aitrendhunter.app/dashboard
           </div>
           <div class="app__bar-right">
-            <span class="tag tag--accent">LIVE</span>
+            <span class="tag">Sample view</span>
             <div class="app__avatar"></div>
           </div>
         </div>
@@ -94,19 +94,12 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
             <div class="app__main-head">
               <div>
                 <h4>Emerging trends</h4>
-                <p>Sorted by opportunity score · 1,284 signals processed</p>
+                <p>Sorted by opportunity score · illustrative sample, not live data</p>
               </div>
               <span class="app__week">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/><path d="M3 9h18M8 3v4m8-4v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                 Week 23 · 2026
               </span>
-            </div>
-
-            <div class="kpis">
-              <div class="kpi"><div class="kpi__l">Tracked trends</div><div class="kpi__v">142 <span class="kpi__d up">+18</span></div></div>
-              <div class="kpi"><div class="kpi__l">New this week</div><div class="kpi__v">23 <span class="kpi__d up">+6</span></div></div>
-              <div class="kpi"><div class="kpi__l">Avg. momentum</div><div class="kpi__v">+34% <span class="kpi__d up">▲</span></div></div>
-              <div class="kpi"><div class="kpi__l">Briefs ready</div><div class="kpi__v">9 <span class="kpi__d up">new</span></div></div>
             </div>
 
             <div class="ttable">
@@ -179,9 +172,9 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
 <!-- ============ LOGO STRIP ============ -->
 <section class="section--tight">
   <div class="container">
-    <p class="eyebrow eyebrow--plain muted" style="text-align:center; display:block; margin-bottom:26px;">Signal pulled from the places ideas show up first</p>
+    <p class="eyebrow eyebrow--plain muted" style="text-align:center; display:block; margin-bottom:26px;">Signal pulled from the three places ideas show up first</p>
     <div class="logos">
-      <span>GitHub</span><span>Hacker News</span><span>RSS feeds</span><span>Product changelogs</span><span>Release notes</span><span>Dev forums</span>
+      <span>GitHub</span><span>Hacker News</span><span>RSS feeds</span>
     </div>
   </div>
 </section>
@@ -366,8 +359,8 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
       <div class="case reveal">
         <div class="case__ic"><svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
         <div>
-          <h3>Monitor emerging niches</h3>
-          <p>Check the emerging-markets and accelerating shortlists each week to catch niches while they're still early. Keyword alerts coming soon.</p>
+          <h3>Compare momentum and saturation</h3>
+          <p>Filter by category and sort by momentum or saturation to see which niches are heating up and which are already crowded, before you commit.</p>
         </div>
       </div>
       <div class="case reveal">
@@ -380,8 +373,8 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
       <div class="case reveal">
         <div class="case__ic"><svg viewBox="0 0 24 24" fill="none"><path d="M6 3h9l5 5v13H6z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 12h7M9 16h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
         <div>
-          <h3>Prep weekly opportunity reports</h3>
-          <p>Walk your team or investors through a source-backed brief straight from the dashboard, without copy-pasting from a dozen tabs. PDF export coming soon.</p>
+          <h3>Review the evidence before you commit</h3>
+          <p>Every score links back to the exact repos, threads, and feed entries it came from, so you can check the evidence before betting on an idea.</p>
         </div>
       </div>
     </div>
@@ -394,7 +387,7 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
     <div class="section-head">
       <span class="eyebrow">Sample output</span>
       <h2 class="h2">A peek at what lands in your dashboard every week.</h2>
-      <p class="lead">Real examples of trends with score, category, source signals, and a short brief. This is the format every trend arrives in.</p>
+      <p class="lead">Illustrative sample cards showing the score, category, source signals, and brief format every trend arrives in. For a real, dated example, see <a href="/pricing#real-example" style="text-decoration:underline;">the real example on the pricing page</a>.</p>
     </div>
 
     <div class="samples">
@@ -410,7 +403,7 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
         <article class="scard" data-cat="ai">
           <div class="scard__top">
             <div class="scard__big">91<small>/100</small></div>
-            <span class="tag tag--accent">Act now</span>
+            <div style="display:flex; gap:6px;"><span class="tag">Sample</span><span class="tag tag--accent">Act now</span></div>
           </div>
           <h3>Self-hosted LLM gateways</h3>
           <div class="scard__cat">AI infra · trend score</div>
@@ -430,7 +423,7 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
         <article class="scard" data-cat="dev">
           <div class="scard__top">
             <div class="scard__big">84<small>/100</small></div>
-            <span class="tag tag--accent">Rising</span>
+            <div style="display:flex; gap:6px;"><span class="tag">Sample</span><span class="tag tag--accent">Rising</span></div>
           </div>
           <h3>AI agents for QA testing</h3>
           <div class="scard__cat">Dev tools · trend score</div>
@@ -450,7 +443,7 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
         <article class="scard" data-cat="fintech">
           <div class="scard__top">
             <div class="scard__big">79<small>/100</small></div>
-            <span class="tag tag--accent">Watch</span>
+            <div style="display:flex; gap:6px;"><span class="tag">Sample</span><span class="tag tag--accent">Watch</span></div>
           </div>
           <h3>AI compliance automation</h3>
           <div class="scard__cat">Fintech · trend score</div>
@@ -557,13 +550,12 @@ const landingMarkup = String.raw`<!-- ============ NAV ============ -->
         </div>
         <div class="footer__col">
           <h6>Sources</h6>
-          <a href="#top">GitHub</a>
-          <a href="#top">Hacker News</a>
-          <a href="#top">RSS feeds</a>
+          <span class="footer__static">GitHub</span>
+          <span class="footer__static">Hacker News</span>
+          <span class="footer__static">RSS feeds</span>
         </div>
         <div class="footer__col">
           <h6>Company</h6>
-          <a href="#top">About</a>
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>
           <a href="/contact">Contact</a>
