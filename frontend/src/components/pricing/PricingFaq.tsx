@@ -1,27 +1,27 @@
 const FAQ_ITEMS: Array<{ q: string; a: string }> = [
   {
-    q: "¿Me cobran hoy?",
-    a: "No. El primer cobro se realiza al terminar los siete días de prueba, salvo cancelación previa.",
+    q: "Am I charged today?",
+    a: "No. Your first charge happens when the 7-day trial ends, unless you cancel before then.",
   },
   {
-    q: "¿Necesito introducir tarjeta?",
-    a: "Sí. Stripe pide una tarjeta al iniciar el checkout, incluso durante el periodo de prueba, pero no se realiza ningún cargo hasta que termina.",
+    q: "Do I need to enter a card?",
+    a: "Yes. Stripe asks for a card when you start checkout, even during the trial, but you're not charged until the trial ends.",
   },
   {
-    q: "¿Puedo cancelar durante el trial?",
-    a: "Sí, mediante el portal de facturación, antes del primer cobro.",
+    q: "Can I cancel during the trial?",
+    a: "Yes, through the billing portal, before the first charge.",
   },
   {
-    q: "¿Qué fuentes analiza?",
-    a: "GitHub, Hacker News y feeds RSS seleccionados.",
+    q: "What sources does it analyze?",
+    a: "GitHub, Hacker News, and selected RSS feeds.",
   },
   {
-    q: "¿Qué ocurre si cancelo?",
-    a: "Si cancelas durante el trial, no se te cobra nada y pierdes el acceso al terminar el periodo de prueba. Si cancelas después del primer cobro, mantienes el acceso hasta el final del periodo ya pagado y la suscripción no se renueva.",
+    q: "What happens if I cancel?",
+    a: "If you cancel during the trial, you're not charged anything and lose access when the trial ends. If you cancel after the first charge, you keep access until the end of the period you already paid for, and the subscription won't renew.",
   },
   {
-    q: "¿Es una recomendación de inversión?",
-    a: "No. Es una herramienta de investigación y apoyo a decisiones.",
+    q: "Is this investment advice?",
+    a: "No. It's a research and decision-support tool.",
   },
 ];
 

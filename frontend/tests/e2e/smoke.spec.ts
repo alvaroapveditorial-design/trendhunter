@@ -71,11 +71,11 @@ test("pricing page FAQ answers the required questions", async ({ page }) => {
   await page.goto("/pricing");
 
   const faq = page.locator("#faq");
-  const billingQuestion = faq.getByText("¿Me cobran hoy?");
+  const billingQuestion = faq.getByText("Am I charged today?");
   await expect(billingQuestion).toBeVisible();
   await billingQuestion.click();
   await expect(
-    faq.getByText("El primer cobro se realiza al terminar los siete días de prueba"),
+    faq.getByText("Your first charge happens when the 7-day trial ends"),
   ).toBeVisible();
 });
 
