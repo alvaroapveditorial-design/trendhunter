@@ -17,6 +17,7 @@ No se tocó el precio (39 €/mes), la duración del trial (7 días), el algorit
 - `frontend/src/components/TrendDetailAnalytics.tsx` — añade `First Trend Opened` con guardado por `sessionStorage`.
 - `frontend/src/components/LoginForm.tsx` — renombra el evento `Login` → `Login Completed`.
 - `frontend/src/components/pricing/PricingAnalytics.tsx`, `RealExampleCard.tsx`, `ProductScreenshot.tsx`, `PricingFaq.tsx` — nuevos, un solo propósito cada uno.
+- `frontend/public/pricing/dashboard-preview.png`, `dashboard-preview-mobile.png` — capturas reales del dashboard (2 de agosto de 2026), añadidas tras la petición explícita del usuario de sustituir el placeholder.
 - `frontend/src/app/globals.css` — una regla nueva (`.footer__static`) para los enlaces de fuentes que dejaron de ser navegables.
 - `frontend/tests/e2e/smoke.spec.ts` — reescrito y ampliado a 11 tests.
 - `.claude/launch.json` — config de dev local para poder previsualizar el frontend (herramienta de desarrollo, no afecta producción).
@@ -40,7 +41,7 @@ No se tocó el precio (39 €/mes), la duración del trial (7 días), el algorit
 
 ## Riesgos y deuda pendiente
 
-1. **Captura real del dashboard sin implementar.** `ProductScreenshot.tsx` es un placeholder claramente etiquetado ("REAL PRODUCT VIEW — SCREENSHOT PENDING") con instrucciones exactas de qué capturar, con qué cuenta, y dónde colocar el archivo. Requiere una sesión manual del usuario en el dashboard.
+1. ~~Captura real del dashboard sin implementar.~~ **Resuelto el 2 de agosto de 2026, a petición explícita del usuario.** `ProductScreenshot.tsx` ya muestra una captura real de `aitrendhunter.app/dashboard` (cuenta de prueba con un trial real en producción, topbar con email/facturación ocultado antes de capturar), en desktop y móvil, con la leyenda "Dashboard snapshot captured on 2 August 2026". Detalle del método en `PHASE_2_IMPLEMENTATION_PLAN.md`.
 2. **`SENDER_EMAIL` sigue en `onboarding@resend.dev`.** No es un dominio propio verificado. Pasos exactos documentados en `PHASE_2_IMPLEMENTATION_PLAN.md` (verificar `aitrendhunter.app` en Resend, añadir registros DNS, actualizar la variable en Railway). No bloquea el resto de la fase; sí es un punto del checklist de reactivación de Meta.
 3. **Confirmación en vivo de los eventos de Plausible.** El script de Plausible carga correctamente en producción (`window.plausible` es una función real, verificado) y los 12 eventos están cubiertos por tests E2E con un stub de `window.plausible`, pero no pude confirmar visualmente en el panel de Plausible que los eventos aparezcan en tiempo real porque el panel requiere el login del usuario, al que no tengo acceso desde este entorno. Recomiendo verificarlo tú mismo y, como ya apunta `PHASE_2_BASELINE.md`, configurar Goals para los 12 eventos.
 4. **Confirmación en vivo de Sentry.** El backend confirma `Sentry error tracking enabled` en los logs de arranque y no hay errores en los últimos 100 renglones de log tras el despliegue, pero no pude abrir el dashboard de Sentry (requiere login).
@@ -57,8 +58,8 @@ Ver `phoenix/ANALYTICS_EVENT_MAP.md` para el detalle completo de los 12 eventos.
 ## QA de producción (verificado en vivo en `aitrendhunter.app`, 2 de agosto de 2026)
 
 1. **Home abre correctamente** — hero real, sin cifras ficticias (verificado con una comprobación regex en el DOM en vivo: `1,284|142 Tracked|23 New this week|+34%` → ninguna coincidencia).
-2. **`/pricing` abre correctamente** — todo el contenido nuevo presente (hero, screenshot placeholder, ejemplo real, mecanismo, qué incluye hoy/coming soon, FAQ).
-3. **Screenshot** — placeholder correctamente etiquetado, no hay datos inventados.
+2. **`/pricing` abre correctamente** — todo el contenido nuevo presente (hero, captura real del dashboard, ejemplo real, mecanismo, qué incluye hoy/coming soon, FAQ).
+3. **Screenshot** — actualizado el 2 de agosto de 2026: ya no es un placeholder. Captura real de `aitrendhunter.app/dashboard` (desktop 1440×900 y móvil 390×844), con la topbar (email de cuenta + botón de facturación) oculta antes de capturar, así que no se ve ningún dato de cuenta ni de facturación. Verificado en vivo tras el despliegue: la imagen carga (`naturalWidth > 0`) y la leyenda "Dashboard snapshot captured on 2 August 2026" es visible.
 4. **Ejemplo real** — "Llmgateway", fecha de detección visible, fuente real (`theopenco/llmgateway`, 1.486 estrellas, 54 issues abiertos).
 5. **FAQ** — presente, se expande.
 6. **Navegación** — Home / How it works / Real example / FAQ / View dashboard, todos funcionales; 0 enlaces `href="#"` o vacíos en `/pricing` ni en la home (verificado con JS en el DOM en vivo, tras corregir uno detectado durante esta misma QA).
@@ -92,6 +93,6 @@ Sin migraciones de base de datos en esta fase. Rollback puramente de código: `r
 
 **No he reactivado la campaña de Meta. Esa decisión es tuya.**
 
-## Phoenix Launch Readiness: 87/100
+## Phoenix Launch Readiness: 91/100
 
-Los 4 puntos P0 del brief están completos, verificados en producción, y probados. Los dos puntos que faltan para 100 son explícitamente ajenos a lo que puedo completar sin tu intervención: (a) verificar un dominio propio en Resend (necesita tu acceso al panel y al DNS), y (b) confirmar visualmente en el panel de Plausible que los 12 eventos están llegando (necesita tu login). Ninguno de los dos bloquea el uso del producto ni el checkout, que funciona de punta a punta en producción con el precio y el trial correctos.
+Actualizado tras sustituir el placeholder del screenshot por una captura real (2 de agosto de 2026, a petición explícita del usuario) — sube de 87 a 91 porque el único punto P0 que quedaba abierto (5.2, captura real del dashboard) ya está resuelto y verificado en producción. Los 9 puntos restantes del checklist de reactivación de Meta que dependen de mí están completos. Los dos puntos que faltan para 100 son explícitamente ajenos a lo que puedo completar sin tu intervención: (a) verificar un dominio propio en Resend (necesita tu acceso al panel y al DNS), y (b) confirmar visualmente en el panel de Plausible que los 12 eventos están llegando (necesita tu login). Ninguno de los dos bloquea el uso del producto ni el checkout, que funciona de punta a punta en producción con el precio y el trial correctos.

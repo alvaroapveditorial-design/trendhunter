@@ -48,6 +48,16 @@ test("pricing page loads and fires Pricing View", async ({ page }) => {
   expect(calls.filter((c) => c.event === "Pricing View")).toHaveLength(1);
 });
 
+test("pricing page shows a real, captioned dashboard screenshot", async ({ page }) => {
+  await page.goto("/pricing");
+
+  const section = page.locator("#product-screenshot");
+  const img = section.locator("img");
+  await expect(img).toBeVisible();
+  expect(await img.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0);
+  await expect(section.getByText(/Dashboard snapshot captured on/i)).toBeVisible();
+});
+
 test("pricing page shows the real, dated opportunity example", async ({ page }) => {
   await page.goto("/pricing");
 
