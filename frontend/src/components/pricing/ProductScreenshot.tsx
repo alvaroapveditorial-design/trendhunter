@@ -1,11 +1,17 @@
 /**
  * Real dashboard screenshot for Phoenix Fase 2 (section 5.2). Captured
- * 2026-08-02 from production (aitrendhunter.app/dashboard) using a test
+ * 2026-08-04 from production (aitrendhunter.app/dashboard) using a test
  * account, with the topbar (email + billing button) hidden before the
  * capture so no account/billing info is visible. Shows real trend data.
  *
+ * Viewport heights (1440x945 desktop, 390x780 mobile) are chosen to end
+ * right after a full card/row -- the first capture cut the "Explore all
+ * trends" stat row (desktop) and the "Problem it solves" card (mobile)
+ * mid-way, which is what to avoid on any refresh.
+ *
  * To refresh: log into the dashboard with an account that has real trend
- * data, hide .topbar, capture at ~1440px and ~390px widths, and replace
+ * data, hide .topbar, capture at ~1440px and ~390px widths (checking the
+ * bottom edge lands between cards, not through one), and replace
  * frontend/public/pricing/dashboard-preview.png (desktop) and
  * dashboard-preview-mobile.png (mobile). Update the caption date below.
  */
@@ -32,7 +38,7 @@ export function ProductScreenshot() {
           />
         </picture>
         <p style={{ marginTop: 12, fontSize: 13, color: "var(--muted)" }}>
-          Dashboard snapshot captured on 2 August 2026.
+          Dashboard snapshot captured on 4 August 2026.
         </p>
       </div>
     </section>
